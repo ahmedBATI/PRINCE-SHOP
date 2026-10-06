@@ -1,0 +1,161 @@
+{
+  "_aide": [
+    "CONFIGURATION DU SITE — tout ce qui n'est pas un produit se règle ici.",
+    "Après chaque modification : lancer `python build.py` pour régénérer le site (dossier dist/).",
+    "Les valeurs marquées `confirmed: false` viennent d'Instagram ou de Google Maps et doivent être validées par la boutique avant la mise en ligne."
+  ],
+
+  "site": {
+    "name": "Prince Shop",
+    "url": "https://princeshop.example",
+    "basePath": "",
+    "lang": "fr-MA",
+    "title": "Prince Shop Fès — Chaussures & Sacs",
+    "description": "Mocassins, baskets, sandales et sacs à Fès. Commande simple sur WhatsApp, livraison partout au Maroc.",
+    "currency": "DH",
+    "currencyCode": "MAD",
+    "priceOnRequest": "Prix sur demande"
+  },
+
+  "contact": {
+    "whatsapp": "212662520130",
+    "whatsappDisplay": "06 62 52 01 30",
+    "phone": "212664479449",
+    "phoneDisplay": "06 64 47 94 49",
+    "instagramHandle": "princeshop_ali",
+    "instagramUrl": "https://www.instagram.com/princeshop_ali/",
+    "instagramFollowers": "24K"
+  },
+
+  "store": {
+    "addressLine1": "Av. Oran, Montfleuri 1 (Zohour)",
+    "addressLine2": "Fès 30050, Maroc",
+    "city": "Fès",
+    "postalCode": "30050",
+    "countryCode": "MA",
+    "mapsUrl": "https://maps.app.goo.gl/UuQjvm1TEyzavnbx6",
+    "mapsListedAddress": "2256+RPV, Rue d'Alep, Fès 30050",
+    "lat": 34.0096047,
+    "lng": -4.9882087,
+    "hours": {
+      "label": "Tous les jours, 10h – 22h30",
+      "opens": "10:00",
+      "closes": "22:30",
+      "source": "Google Maps",
+      "confirmed": false
+    }
+  },
+
+  "delivery": {
+    "headline": "Livraison partout au Maroc",
+    "fee": null,
+    "feeLabel": "à confirmer sur WhatsApp",
+    "delay": null,
+    "note": "Les frais et le délai dépendent de votre ville : ils vous sont confirmés sur WhatsApp avant l'envoi."
+  },
+
+  "payment": {
+    "label": "Paiement à l'avance",
+    "note": "Pour les livraisons, le paiement se fait à l'avance. Les modalités vous sont confirmées sur WhatsApp au moment de la commande.",
+    "source": "Bio Instagram (« Payement avant »)",
+    "confirmed": false
+  },
+
+  "announcement": {
+    "short": "Livraison partout au Maroc",
+    "long": "Livraison partout au Maroc — commande confirmée sur WhatsApp"
+  },
+
+  "hero": {
+    "eyebrow": "Boutique de mode · Fès",
+    "title": "Chaussures & sacs,",
+    "titleAccent": "choisis à Fès, livrés partout au Maroc.",
+    "text": "Mocassins, baskets, sandales et sacs : les nouveautés de la boutique, à commander en quelques secondes sur WhatsApp.",
+    "images": [],
+    "productIds": ["mocassin-breloques", "sac-a-main-structure"]
+  },
+
+  "spotlight": {
+    "productId": "mocassin-breloques",
+    "eyebrow": "Le modèle du moment",
+    "title": "Un mocassin,",
+    "titleAccent": "onze couleurs.",
+    "text": "Camel, crème, marine, rouge, orange… Le mocassin à breloques existe en onze couleurs à la boutique. Choisissez la vôtre."
+  },
+
+  "trust": [
+    { "icon": "truck", "title": "Livraison partout au Maroc", "text": "Frais et délai confirmés avant l'envoi" },
+    { "icon": "whatsapp", "title": "Commande sur WhatsApp", "text": "Un vendeur vous répond et confirme" },
+    { "icon": "pin", "title": "Boutique à Fès", "text": "Montfleuri 1 · ouverte 7j/7" },
+    { "icon": "instagram", "title": "24K abonnés", "text": "@princeshop_ali sur Instagram" }
+  ],
+
+  "categories": [
+    {
+      "id": "chaussures",
+      "label": "Chaussures",
+      "singular": "Chaussure",
+      "needsSize": true,
+      "sizeLabel": "Pointure",
+      "intro": "Mocassins, baskets et sandales : les modèles du moment en boutique.",
+      "types": [
+        { "id": "mocassins", "label": "Mocassins", "word": "Mocassin" },
+        { "id": "baskets", "label": "Baskets", "word": "Basket" },
+        { "id": "sandales", "label": "Sandales", "word": "Sandale" }
+      ]
+    },
+    {
+      "id": "sacs",
+      "label": "Sacs",
+      "singular": "Sac",
+      "needsSize": false,
+      "intro": "Sacs à main, bandoulières, pochettes et cabas.",
+      "types": [
+        { "id": "sacs-a-main", "label": "Sacs à main", "word": "Sac" },
+        { "id": "bandouliere", "label": "Bandoulière", "word": "Sac" },
+        { "id": "pochettes", "label": "Pochettes", "word": "Pochette" },
+        { "id": "cabas", "label": "Cabas & voyage", "word": "Cabas" }
+      ]
+    },
+    {
+      "id": "accessoires",
+      "label": "Accessoires",
+      "singular": "Accessoire",
+      "needsSize": false,
+      "intro": "",
+      "types": []
+    }
+  ],
+
+  "filters": {
+    "priceRanges": [[0, 200], [200, 400], [400, 700], [700, null]],
+    "priceFilterMinShare": 0.6
+  },
+
+  "instagram": {
+    "title": "Vu sur Instagram",
+    "text": "Les arrivages passent d'abord en reels. Suivez la boutique pour voir chaque modèle filmé sur place, en vrai.",
+    "posts": [
+      { "label": "Mocassins — 11 couleurs", "date": "2026-08-22", "url": "https://www.instagram.com/princeshop_ali/reel/DcXNbd-iBlb/", "image": "" },
+      { "label": "Baskets à 250 DH", "date": "2026-09-07", "url": "https://www.instagram.com/princeshop_ali/reel/Dc_9wcnOHHx/", "image": "" },
+      { "label": "Arrivage baskets", "date": "2026-09-28", "url": "https://www.instagram.com/princeshop_ali/reel/Dd2hb0jCyFS/", "image": "" },
+      { "label": "Nouveaux sacs", "date": "2026-09-25", "url": "https://www.instagram.com/princeshop_ali/reel/Dduw6b2KBwc/", "image": "" }
+    ]
+  },
+
+  "messages": {
+    "greeting": "Bonjour Prince Shop 👋",
+    "orderIntro": "Je souhaite passer cette commande :",
+    "orderClosing": "Merci de confirmer la disponibilité et les détails de livraison.",
+    "productIntro": "Je suis intéressé(e) par cet article :",
+    "productClosing": "Est-il disponible ?",
+    "help": "J'ai une question."
+  },
+
+  "cities": [
+    "Agadir", "Al Hoceïma", "Béni Mellal", "Berkane", "Berrechid", "Casablanca", "Chefchaouen", "Dakhla",
+    "El Jadida", "Errachidia", "Essaouira", "Fès", "Guelmim", "Ifrane", "Kénitra", "Khémisset", "Khouribga",
+    "Ksar El Kébir", "Laâyoune", "Larache", "Marrakech", "Meknès", "Mohammédia", "Nador", "Ouarzazate",
+    "Oujda", "Rabat", "Safi", "Salé", "Sefrou", "Settat", "Tanger", "Taourirt", "Taza", "Témara", "Tétouan"
+  ]
+}

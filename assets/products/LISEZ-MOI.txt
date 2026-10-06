@@ -1,0 +1,21 @@
+PHOTOS PRODUITS
+===============
+
+Déposez ici les photos, puis citez-les dans data/products.json :
+
+    "images": ["shoes/mocassin-camel-1.jpg", "shoes/mocassin-camel-2.jpg"]
+
+ou, pour des photos propres à une couleur :
+
+    "colors": [{ "name": "Camel", "hex": "#B58A5F", "images": ["shoes/mocassin-camel-1.jpg"] }]
+
+Dossiers : shoes/ (chaussures) · bags/ (sacs) · accessories/ (accessoires)
+
+Format conseillé
+- Portrait 4:5 (ex. 1200 x 1500 px) : c'est le cadre des cartes et des fiches.
+- JPG ou WebP, moins de 250 Ko par photo.
+- Fond simple et lumière du jour : le produit doit occuper les deux tiers du cadre.
+- Noms de fichiers sans espaces ni accents.
+
+Tant qu'un produit n'a pas de photo, le site affiche un échantillon de sa couleur
+avec la mention « Photo à venir ».

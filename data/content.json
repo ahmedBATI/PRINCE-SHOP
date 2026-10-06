@@ -1,0 +1,107 @@
+{
+  "_aide": [
+    "TEXTES DU SITE — questions fréquentes, étapes de commande, présentation et pages d'informations.",
+    "Les variables entre accolades sont remplacées automatiquement depuis config.json :",
+    "{whatsapp} {phone} {address} {hours} {instagram} {maps}",
+    "Pages d'informations : tant que `confirmed` vaut false, la page affiche un avertissement « à confirmer par la boutique ». Remplir `body` puis passer `confirmed` à true."
+  ],
+
+  "howTo": {
+    "title": "Commander, c'est simple",
+    "steps": [
+      { "title": "Choisissez", "text": "Ajoutez vos articles au panier : couleur, pointure, quantité." },
+      { "title": "Envoyez sur WhatsApp", "text": "Votre commande part en un message déjà rédigé. Aucun compte à créer." },
+      { "title": "On confirme ensemble", "text": "Disponibilité, paiement et livraison : tout est confirmé avec vous sur WhatsApp avant l'envoi." }
+    ]
+  },
+
+  "about": {
+    "title": "Retrouvez-nous à Fès",
+    "text": "Prince Shop, c'est une boutique à Montfleuri : des murs de chaussures et de sacs, et des nouveautés à découvrir sur notre Instagram. Passez voir les modèles sur place, ou commandez d'ici : on livre partout au Maroc."
+  },
+
+  "faq": [
+    {
+      "q": "Livrez-vous partout au Maroc ?",
+      "a": "Oui, la livraison est disponible partout au Maroc. Les frais et le délai dépendent de votre ville : ils vous sont confirmés sur WhatsApp avant l'envoi."
+    },
+    {
+      "q": "Comment passer une commande ?",
+      "a": "Ajoutez vos articles au panier, indiquez votre nom, votre téléphone, votre ville et votre adresse, puis envoyez la commande sur WhatsApp. Nous vous répondons pour la confirmer. Aucun compte à créer."
+    },
+    {
+      "q": "Puis-je commander directement sur WhatsApp ?",
+      "a": "Oui. Écrivez-nous au {whatsapp} avec le nom ou la photo de l'article, la couleur et la pointure souhaitées."
+    },
+    {
+      "q": "Comment choisir ma pointure ?",
+      "a": "Indiquez votre pointure habituelle. Si vous hésitez entre deux pointures, écrivez-nous sur WhatsApp avant de commander."
+    },
+    {
+      "q": "Comment connaître la disponibilité d'un article ?",
+      "a": "La disponibilité de chaque article (couleur, pointure) est vérifiée et confirmée sur WhatsApp avant la validation de votre commande."
+    },
+    {
+      "q": "Quels sont les modes de paiement ?",
+      "a": "Pour les livraisons, le paiement se fait à l'avance. Les modalités vous sont confirmées sur WhatsApp au moment de la commande."
+    },
+    {
+      "q": "Puis-je échanger un article ?",
+      "a": "Contactez-nous sur WhatsApp pour confirmation avant de commander."
+    },
+    {
+      "q": "Où se trouve la boutique ?",
+      "a": "{address}. Horaires : {hours}. Vous pouvez vérifier l'emplacement sur Google Maps."
+    }
+  ],
+
+  "legal": [
+    {
+      "id": "livraison",
+      "title": "Livraison",
+      "confirmed": false,
+      "body": [
+        "La livraison est disponible partout au Maroc.",
+        "Les frais de livraison et le délai dépendent de votre ville. Ils vous sont communiqués sur WhatsApp avant la confirmation de votre commande."
+      ],
+      "todo": "Tarifs par ville ou zone, délais, transporteur, suivi du colis."
+    },
+    {
+      "id": "paiement",
+      "title": "Paiement",
+      "confirmed": false,
+      "body": [
+        "Pour les livraisons, le paiement se fait à l'avance. Les modalités vous sont confirmées sur WhatsApp au moment de la commande."
+      ],
+      "todo": "Moyens de paiement acceptés (virement, dépôt, autre), moment exact du règlement, paiement en boutique."
+    },
+    {
+      "id": "echanges-retours",
+      "title": "Échanges & retours",
+      "confirmed": false,
+      "body": [
+        "Pour toute question sur un échange ou un retour, contactez-nous sur WhatsApp avant de commander."
+      ],
+      "todo": "Conditions d'échange (pointure, couleur), délai, état de l'article, frais de retour, remboursement ou avoir."
+    },
+    {
+      "id": "conditions-de-vente",
+      "title": "Conditions de vente",
+      "confirmed": false,
+      "body": [
+        "Une commande envoyée depuis ce site est une demande : elle devient ferme une fois confirmée par Prince Shop sur WhatsApp (disponibilité, prix, livraison et paiement)."
+      ],
+      "todo": "Identité légale du vendeur (raison sociale, ICE, RC), prix et disponibilité, validation de commande, réclamations."
+    },
+    {
+      "id": "confidentialite",
+      "title": "Confidentialité",
+      "confirmed": false,
+      "body": [
+        "Ce site n'a pas de compte client et n'enregistre pas vos informations sur un serveur. Votre panier reste dans votre navigateur.",
+        "Les informations saisies pour commander (nom, téléphone, ville, adresse) sont placées dans le message WhatsApp que vous envoyez vous-même à Prince Shop."
+      ],
+      "todo": "Responsable du traitement, durée de conservation des commandes reçues sur WhatsApp, droits d'accès et de suppression (loi 09-08, CNDP), outils de mesure d'audience éventuels."
+    }
+  ]
+}
