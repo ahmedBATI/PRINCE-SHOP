@@ -42,13 +42,26 @@ export function initSearch() {
       </div>`;
       return;
     }
+    // Catégories et types dont le nom correspond : un raccourci vers la bonne liste.
+    const tokens = norm(query).split(/\s+/).filter(Boolean).map((t) => (t.length > 3 ? t.replace(/s$/, '') : t));
+    const matches = (label) => tokens.every((t) => norm(label).includes(t));
+    const shortcuts = [];
+    CONFIG.categories.forEach((c) => {
+      if (matches(c.label)) shortcuts.push({ label: c.label, url: `${CONFIG.base}/collection/${c.id}/`, n: PRODUCTS.filter((p) => p.category === c.id).length });
+      c.types.forEach((t) => {
+        if (matches(t.label)) shortcuts.push({ label: t.label, url: `${CONFIG.base}/collection/${c.id}/?type=${t.id}`, n: PRODUCTS.filter((p) => p.type === t.id).length });
+      });
+    });
+    const cats = shortcuts.length
+      ? `<div class="results__cats">${shortcuts.map((s) => `<a href="${esc(s.url)}">${esc(s.label)}<small>${s.n}</small></a>`).join('')}</div>`
+      : '';
     const rows = found.slice(0, MAX_RESULTS).map((p) => `<li><a href="${esc(p.url)}">
         <span class="results__thumb">${mediaHTML(p)}</span>
         <span><span class="results__name">${esc(p.name)}</span><span class="results__cat">${esc(p.typeLabel)}</span></span>
         <span class="results__price">${priceHTML(p)}</span>
       </a></li>`).join('');
     const all = `${CONFIG.base}/collection/?q=${encodeURIComponent(query)}`;
-    results.innerHTML = `<p class="label results__count">${plural(found.length, 'résultat')}</p>
+    results.innerHTML = `${cats}<p class="label results__count">${plural(found.length, 'résultat')}</p>
       <ul class="results">${rows}</ul>
       ${found.length > MAX_RESULTS ? `<a class="link results__all" href="${esc(all)}">Voir les ${found.length} résultats${icon('arrow')}</a>` : ''}`;
   };

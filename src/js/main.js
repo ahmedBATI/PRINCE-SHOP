@@ -1,4 +1,5 @@
 // Point d'entrée : ce qui est commun à toutes les pages, puis le module propre à la page.
+import { initCardAdd } from './card-add.js';
 import { initCartDrawer } from './cart-drawer.js';
 import { initSheets } from './dialogs.js';
 import { initQuickAdd } from './quick-add.js';
@@ -31,7 +32,7 @@ function initHeader() {
 // Apparition douce des blocs à l'arrivée dans l'écran. Ce qui est déjà visible ne bouge pas.
 function initReveal() {
   if (reducedMotion() || !('IntersectionObserver' in window)) return;
-  const targets = $$('.section__head, .card, .cat, .spot__grid > *, .insta__grid > *, .store__grid > *, .how__list > li, .faq__grid > *');
+  const targets = $$('.section__head, .grid > .card, .world, .spot__grid > *, .insta__grid > *, .insta__mosaic, .store__grid > *, .how__list > li');
   if (!targets.length) return;
   const viewport = window.innerHeight;
   const observer = new IntersectionObserver((entries) => {
@@ -68,10 +69,31 @@ function initWhatsAppFloat() {
   update();
 }
 
+// Rangées horizontales : flèches sur ordinateur, glissement au doigt sur mobile.
+function initRails() {
+  $$('[data-rail]').forEach((rail) => {
+    const section = rail.closest('section');
+    const prev = section.querySelector('[data-rail-prev]');
+    const next = section.querySelector('[data-rail-next]');
+    if (!prev || !next) return;
+    const step = () => Math.max(rail.clientWidth * 0.8, 240);
+    const update = () => {
+      prev.disabled = rail.scrollLeft < 8;
+      next.disabled = rail.scrollLeft + rail.clientWidth > rail.scrollWidth - 8;
+    };
+    prev.addEventListener('click', () => rail.scrollBy({ left: -step(), behavior: reducedMotion() ? 'auto' : 'smooth' }));
+    next.addEventListener('click', () => rail.scrollBy({ left: step(), behavior: reducedMotion() ? 'auto' : 'smooth' }));
+    rail.addEventListener('scroll', update, { passive: true });
+    update();
+  });
+}
+
 initSheets();
 initCartDrawer();
 initSearch();
 initQuickAdd();
+initCardAdd();
+initRails();
 initHeader();
 initReveal();
 initWhatsAppFloat();

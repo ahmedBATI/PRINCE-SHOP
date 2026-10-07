@@ -2,25 +2,38 @@
   "_aide": [
     "CONFIGURATION DU SITE — tout ce qui n'est pas un produit se règle ici.",
     "Après chaque modification : lancer `python build.py` pour régénérer le site (dossier dist/).",
-    "Les valeurs marquées `confirmed: false` viennent d'Instagram ou de Google Maps et doivent être validées par la boutique avant la mise en ligne."
+    "DEMO_MODE : true = boutique de démonstration (mentions « démo », commandes WhatsApp marquées comme tests).",
+    "            false = site réel : les mentions disparaissent et les produits encore marqués \"demo\": true ne sont plus publiés.",
+    "Les valeurs marquées `confirmed: false` viennent d'Instagram ou de Google Maps et doivent être validées par la boutique."
   ],
+
+  "DEMO_MODE": true,
+
+  "demo": {
+    "notice": "Version de démonstration · produits, visuels et prix présentés à titre d'exemple",
+    "noticeShort": "Version de démonstration · visuels et prix d'exemple",
+    "imageLabel": "Visuel démo",
+    "priceNote": "Prix d'exemple — version de démonstration.",
+    "orderNotice": "⚠️ TEST — message envoyé depuis la version de démonstration du site. Ce n'est pas une vraie commande.",
+    "checkoutNote": "Version de démonstration : le message WhatsApp sera signalé comme un test."
+  },
 
   "site": {
     "name": "Prince Shop",
     "url": "https://princeshop.example",
     "basePath": "",
     "lang": "fr-MA",
-    "title": "Prince Shop Fès — Chaussures & Sacs",
-    "description": "Mocassins, baskets, sandales et sacs à Fès. Commande simple sur WhatsApp, livraison partout au Maroc.",
+    "title": "Prince Shop Fès — Chaussures, Sacs & Accessoires",
+    "description": "Mocassins, baskets, sandales, sacs et accessoires à Fès. Commande simple sur WhatsApp, livraison partout au Maroc.",
     "currency": "DH",
     "currencyCode": "MAD",
     "priceOnRequest": "Prix sur demande"
   },
 
   "contact": {
-    "whatsapp": "212662520130",
+    "WHATSAPP_NUMBER": "+212 662 520 130",
+    "PHONE_NUMBER": "+212 664 479 449",
     "whatsappDisplay": "06 62 52 01 30",
-    "phone": "212664479449",
     "phoneDisplay": "06 64 47 94 49",
     "instagramHandle": "princeshop_ali",
     "instagramUrl": "https://www.instagram.com/princeshop_ali/",
@@ -28,13 +41,20 @@
   },
 
   "store": {
+    "_note": "Deux sources, volontairement non fusionnées : l'adresse donnée par la boutique sur Instagram (affichée), et la fiche Google Maps liée depuis sa bio (utilisée pour l'itinéraire, les horaires et le point GPS).",
     "addressLine1": "Av. Oran, Montfleuri 1 (Zohour)",
-    "addressLine2": "Fès 30050, Maroc",
+    "addressLine2": "Fès, Maroc",
     "city": "Fès",
-    "postalCode": "30050",
     "countryCode": "MA",
     "mapsUrl": "https://maps.app.goo.gl/UuQjvm1TEyzavnbx6",
-    "mapsListedAddress": "2256+RPV, Rue d'Alep, Fès 30050",
+    "mapsListing": {
+      "name": "Prince shop",
+      "category": "Boutique d'accessoires de mode",
+      "address": "2256+RPV, Rue d'Alep, Fès 30050",
+      "phone": "06 64 47 94 49",
+      "rating": "4,3 (7 avis)",
+      "checked": "2026-10-06"
+    },
     "lat": 34.0096047,
     "lng": -4.9882087,
     "hours": {
@@ -55,9 +75,9 @@
   },
 
   "payment": {
-    "label": "Paiement à l'avance",
-    "note": "Pour les livraisons, le paiement se fait à l'avance. Les modalités vous sont confirmées sur WhatsApp au moment de la commande.",
-    "source": "Bio Instagram (« Payement avant »)",
+    "label": "Paiement",
+    "note": "Les modalités de paiement sont confirmées lors de la commande.",
+    "instagramBio": "La bio Instagram indique « Payement avant » : à préciser avec la boutique.",
     "confirmed": false
   },
 
@@ -70,34 +90,36 @@
     "eyebrow": "Boutique de mode · Fès",
     "title": "Chaussures & sacs,",
     "titleAccent": "choisis à Fès, livrés partout au Maroc.",
-    "text": "Mocassins, baskets, sandales et sacs : les nouveautés de la boutique, à commander en quelques secondes sur WhatsApp.",
-    "images": [],
-    "productIds": ["mocassin-breloques", "sac-a-main-structure"]
+    "text": "Mocassins, baskets, sandales, sacs et accessoires : la sélection de la boutique, à commander en quelques secondes sur WhatsApp.",
+    "facts": ["Boutique à Fès", "Livraison partout au Maroc", "24K abonnés Instagram"],
+    "images": [
+      "https://images.unsplash.com/photo-1678784973551-f38208de2529",
+      "https://images.unsplash.com/photo-1640901555383-7335ec5a6476"
+    ],
+    "links": ["mocassin-signature", "sac-elegance"]
   },
 
   "spotlight": {
-    "productId": "mocassin-breloques",
+    "productId": "mocassin-signature",
     "eyebrow": "Le modèle du moment",
     "title": "Un mocassin,",
     "titleAccent": "onze couleurs.",
-    "text": "Camel, crème, marine, rouge, orange… Le mocassin à breloques existe en onze couleurs à la boutique. Choisissez la vôtre."
+    "text": "Camel, bleu gris, marine, rouge, orange… Ce mocassin existe en onze couleurs à la boutique. Choisissez la vôtre."
   },
 
-  "trust": [
-    { "icon": "truck", "title": "Livraison partout au Maroc", "text": "Frais et délai confirmés avant l'envoi" },
-    { "icon": "whatsapp", "title": "Commande sur WhatsApp", "text": "Un vendeur vous répond et confirme" },
-    { "icon": "pin", "title": "Boutique à Fès", "text": "Montfleuri 1 · ouverte 7j/7" },
-    { "icon": "instagram", "title": "24K abonnés", "text": "@princeshop_ali sur Instagram" }
-  ],
+  "home": {
+    "_selection": "Produits de « Sélection du moment », dans l'ordre. Le premier est affiché en grand. Laisser vide pour utiliser les produits \"featured\".",
+    "selection": ["sac-elegance", "basket-bicolore", "sac-coquille", "basket-running-retro", "sac-bowling"]
+  },
 
   "categories": [
     {
       "id": "chaussures",
       "label": "Chaussures",
       "singular": "Chaussure",
-      "needsSize": true,
       "sizeLabel": "Pointure",
       "intro": "Mocassins, baskets et sandales : les modèles du moment en boutique.",
+      "image": "https://images.unsplash.com/photo-1649503377051-e092f490c482",
       "types": [
         { "id": "mocassins", "label": "Mocassins", "word": "Mocassin" },
         { "id": "baskets", "label": "Baskets", "word": "Basket" },
@@ -108,33 +130,36 @@
       "id": "sacs",
       "label": "Sacs",
       "singular": "Sac",
-      "needsSize": false,
-      "intro": "Sacs à main, bandoulières, pochettes et cabas.",
+      "intro": "Sacs à main, bandoulières et cabas.",
+      "image": "https://images.unsplash.com/photo-1760624294514-ca40aafe3d96",
       "types": [
         { "id": "sacs-a-main", "label": "Sacs à main", "word": "Sac" },
         { "id": "bandouliere", "label": "Bandoulière", "word": "Sac" },
-        { "id": "pochettes", "label": "Pochettes", "word": "Pochette" },
-        { "id": "cabas", "label": "Cabas & voyage", "word": "Cabas" }
+        { "id": "cabas", "label": "Cabas", "word": "Cabas" }
       ]
     },
     {
       "id": "accessoires",
       "label": "Accessoires",
       "singular": "Accessoire",
-      "needsSize": false,
-      "intro": "",
-      "types": []
+      "intro": "Lunettes de soleil et petite maroquinerie.",
+      "image": "https://images.unsplash.com/photo-1618677366787-9727aacca7ea",
+      "types": [
+        { "id": "lunettes", "label": "Lunettes", "word": "Lunettes" },
+        { "id": "maroquinerie", "label": "Petite maroquinerie", "word": "Accessoire" }
+      ]
     }
   ],
 
   "filters": {
-    "priceRanges": [[0, 200], [200, 400], [400, 700], [700, null]],
+    "priceRanges": [[0, 200], [200, 300], [300, 400], [400, null]],
     "priceFilterMinShare": 0.6
   },
 
   "instagram": {
-    "title": "Vu sur Instagram",
+    "title": "Suivez-nous sur Instagram",
     "text": "Les arrivages passent d'abord en reels. Suivez la boutique pour voir chaque modèle filmé sur place, en vrai.",
+    "_posts": "Liens vers de vrais reels de la boutique. Ajouter \"image\" (fichier 9:16 dans assets/) pour afficher une vignette.",
     "posts": [
       { "label": "Mocassins — 11 couleurs", "date": "2026-08-22", "url": "https://www.instagram.com/princeshop_ali/reel/DcXNbd-iBlb/", "image": "" },
       { "label": "Baskets à 250 DH", "date": "2026-09-07", "url": "https://www.instagram.com/princeshop_ali/reel/Dc_9wcnOHHx/", "image": "" },
@@ -146,7 +171,7 @@
   "messages": {
     "greeting": "Bonjour Prince Shop 👋",
     "orderIntro": "Je souhaite passer cette commande :",
-    "orderClosing": "Merci de confirmer la disponibilité et les détails de livraison.",
+    "orderClosing": "Merci de confirmer la disponibilité et la livraison.",
     "productIntro": "Je suis intéressé(e) par cet article :",
     "productClosing": "Est-il disponible ?",
     "help": "J'ai une question."

@@ -26,7 +26,7 @@ export function init() {
   const priced = products.filter((p) => p.price != null);
   if (products.length && priced.length / products.length >= CONFIG.priceFilterMinShare) {
     facets.prices = CONFIG.priceRanges
-      .map(([min, max], index) => ({ index: String(index), min, max, label: max == null ? `Plus de ${money(min)}` : min === 0 ? `Moins de ${money(max)}` : `${money(min)} – ${money(max)}` }))
+      .map(([min, max], index) => ({ index: String(index), min, max, label: max == null ? `Plus de ${money(min)}` : min === 0 ? `Moins de ${money(max)}` : `${min} – ${money(max)}` }))
       .filter((r) => priced.some((p) => p.price >= r.min && (r.max == null || p.price < r.max)));
   }
 

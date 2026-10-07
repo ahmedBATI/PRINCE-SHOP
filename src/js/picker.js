@@ -9,7 +9,11 @@ export function sizeLabelFor(product) {
 // Même balisage que celui généré côté serveur dans src/pages.py (page_product).
 export function pickerHTML(product) {
   let html = '';
-  if (product.colors.length) {
+  if (product.colors.length === 1) {
+    const c = product.colors[0];
+    html += `<p class="picker__static"><span>Couleur</span><b>${esc(c.name)}</b><i class="dot dot--${c.tone}" style="--c:${esc(c.hex)}"></i>` +
+      `<input type="hidden" name="color" value="${esc(c.name)}"></p>`;
+  } else if (product.colors.length) {
     const swatches = product.colors.map((c, i) =>
       `<label class="swatch"><input type="radio" name="color" value="${esc(c.name)}"${i === 0 ? ' checked' : ''}>` +
       `<span class="swatch__dot dot--${c.tone}" style="--c:${esc(c.hex)}"></span><span class="sr-only">${esc(c.name)}</span></label>`).join('');

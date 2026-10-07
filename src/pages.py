@@ -15,7 +15,7 @@ def e(value):
 
 
 TAG = re.compile(r"(<[^>]+>)")
-NNBSP, NBSP, APOSTROPHE = "\u202f", "\u00a0", "\u2019"
+NNBSP, NBSP, APOSTROPHE = " ", " ", "’"
 
 
 def french_spaces(html):
@@ -32,6 +32,11 @@ def french_spaces(html):
     return "".join(parts)
 
 
+def digits(number):
+    """« +212 662 520 130 » → « 212662520130 » (format attendu par wa.me et tel:)."""
+    return re.sub(r"\D", "", str(number))
+
+
 # --------------------------------------------------------------------------
 # Icônes (symboles SVG, tracé fin). Utilisées côté gabarits et côté JS via <use>.
 # --------------------------------------------------------------------------
@@ -41,16 +46,18 @@ ICONS = {
     "close": f'<path {STROKE} d="M5.5 5.5l13 13M18.5 5.5l-13 13"/>',
     "search": f'<circle {STROKE} cx="11" cy="11" r="6.25"/><path {STROKE} d="M15.75 15.75L20.5 20.5"/>',
     "bag": f'<path {STROKE} d="M5 8.25h14l-.9 12.25H5.9L5 8.25z"/><path {STROKE} d="M9 8.25V6.9a3 3 0 0 1 6 0v1.35"/>',
+    "home": f'<path {STROKE} d="M4 10.75L12 4l8 6.75V20h-5.25v-5.5h-5.5V20H4v-9.25z"/>',
+    "grid": f'<path {STROKE} d="M4.5 4.5h6v6h-6zM13.5 4.5h6v6h-6zM4.5 13.5h6v6h-6zM13.5 13.5h6v6h-6z"/>',
     "plus": f'<path {STROKE} d="M12 5.5v13M5.5 12h13"/>',
     "minus": f'<path {STROKE} d="M5.5 12h13"/>',
     "arrow": f'<path {STROKE} d="M4 12h15.5M14 6.5l5.5 5.5-5.5 5.5"/>',
     "arrow-out": f'<path {STROKE} d="M7.5 16.5l9-9M9 7.5h7.5V15"/>',
     "chevron": f'<path {STROKE} d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',
     "check": f'<path {STROKE} d="M5 12.5l4.5 4.5L19 7.5"/>',
+    "expand": f'<path {STROKE} d="M4.5 9.5v-5h5M19.5 14.5v5h-5M4.5 4.5l6 6M19.5 19.5l-6-6"/>',
     "pin": f'<path {STROKE} d="M12 21s6.5-5.7 6.5-11a6.5 6.5 0 1 0-13 0c0 5.3 6.5 11 6.5 11z"/><circle {STROKE} cx="12" cy="10" r="2.3"/>',
     "phone": f'<path {STROKE} d="M6.6 3.75h2.9l1.4 3.9-1.9 1.4a10.6 10.6 0 0 0 5.9 5.9l1.4-1.9 3.9 1.4v2.9a1.9 1.9 0 0 1-1.9 1.9A15.6 15.6 0 0 1 4.7 5.65a1.9 1.9 0 0 1 1.9-1.9z"/>',
     "truck": f'<path {STROKE} d="M2.75 6.75h10.5v9.5H2.75zM13.25 10h3.9l3.1 3.1v3.15h-7"/><circle {STROKE} cx="7" cy="17.75" r="1.75"/><circle {STROKE} cx="16.75" cy="17.75" r="1.75"/>',
-    "clock": f'<circle {STROKE} cx="12" cy="12" r="8.25"/><path {STROKE} d="M12 7.5V12l3 2"/>',
     "filter": f'<path {STROKE} d="M4 7.5h16M7 12h10M10 16.5h4"/>',
     "play": '<path fill="currentColor" d="M8.5 6v12l10-6z"/>',
     "instagram": f'<rect {STROKE} x="3.75" y="3.75" width="16.5" height="16.5" rx="4.5"/><circle {STROKE} cx="12" cy="12" r="3.9"/><circle fill="currentColor" cx="17" cy="7" r="1"/>',
@@ -92,6 +99,22 @@ def slug(text):
 
 
 # --------------------------------------------------------------------------
+# Images : fichiers locaux (assets/…) ou adresses web. Les photos Unsplash de la démo
+# sont servies par leur CDN, recadrées et redimensionnées à la volée (AVIF/WebP).
+# --------------------------------------------------------------------------
+UNSPLASH = "https://images.unsplash.com/"
+WIDTHS = (320, 480, 640, 800, 1200)
+
+
+def as_image(image):
+    return {"src": image} if isinstance(image, str) else image
+
+
+def is_remote(src):
+    return src.startswith(("http://", "https://"))
+
+
+# --------------------------------------------------------------------------
 # Site : accès aux données + petites aides partagées par les gabarits
 # --------------------------------------------------------------------------
 class Site:
@@ -100,8 +123,11 @@ class Site:
         self.products = products
         self.content = content
         self.v = version
+        self.demo = bool(config.get("DEMO_MODE"))
         self.base = config["site"]["basePath"].rstrip("/")
         self.origin = config["site"]["url"].rstrip("/")
+        self.whatsapp = digits(config["contact"]["WHATSAPP_NUMBER"])
+        self.phone = digits(config["contact"]["PHONE_NUMBER"])
         self.by_id = {p["id"]: p for p in products}
         self.cat_by_id = {c["id"]: c for c in config["categories"]}
         # Catégories réellement présentes dans le catalogue (jamais de catégorie vide).
@@ -135,14 +161,38 @@ class Site:
         u = self.url(f"/collection/{cat_id}/")
         return f"{u}?type={type_id}" if type_id else u
 
-    def image_url(self, rel):
-        return f"{self.base}/assets/products/{quote(rel)}"
-
     def wa(self, text=None):
-        number = self.c["contact"]["whatsapp"]
         if text is None:
             text = f'{self.c["messages"]["greeting"]}\n\n{self.c["messages"]["help"]}'
-        return f"https://wa.me/{number}?text={quote(text)}"
+        if self.demo:  # la boutique doit savoir qu'un message vient de la version de démonstration
+            text = f'{self.c["demo"]["orderNotice"]}\n\n{text}'
+        return f"https://wa.me/{self.whatsapp}?text={quote(text)}"
+
+    def sources(self, image, ratio=(4, 5), folder="products"):
+        """Adresses d'une image : {src, srcset, thumb, full}. ratio=None garde les proportions d'origine."""
+        image = as_image(image)
+        src = image["src"]
+        if src.startswith(UNSPLASH):
+            base = src.split("?")[0]
+            focus = ""
+            if "zoom" in image or "x" in image or "y" in image:
+                focus = f'&crop=focalpoint&fp-x={image.get("x", 0.5)}&fp-y={image.get("y", 0.5)}&fp-z={image.get("zoom", 1)}'
+
+            def at(width, quality=72):
+                size = f"&w={width}&h={round(width * ratio[1] / ratio[0])}&fit=crop" if ratio else f"&w={width}&fit=max"
+                return f"{base}?auto=format&q={quality}{size}{focus}"
+
+            return {"src": at(800), "srcset": ", ".join(f"{at(w)} {w}w" for w in WIDTHS), "thumb": at(160, 60), "full": at(1600, 80)}
+        url = src if is_remote(src) else f'{self.base}/assets/{folder + "/" if folder else ""}{quote(src)}'
+        return {"src": url, "srcset": "", "thumb": url, "full": url}
+
+    def img(self, image, alt="", sizes="100vw", eager=False, ratio=(4, 5), folder="products", cls=""):
+        s = self.sources(image, ratio, folder)
+        w, h = (1200, round(1200 * ratio[1] / ratio[0])) if ratio else (1200, 1500)
+        srcset = f' srcset="{e(s["srcset"])}" sizes="{e(sizes)}"' if s["srcset"] else ""
+        load = 'loading="eager" fetchpriority="high"' if eager else 'loading="lazy"'
+        klass = f' class="{cls}"' if cls else ""
+        return f'<img{klass} src="{e(s["src"])}"{srcset} alt="{e(alt)}" width="{w}" height="{h}" {load} decoding="async">'
 
     # -- Données
     def by_date(self):
@@ -164,6 +214,9 @@ class Site:
             if c.get("images"):
                 return c["images"]
         return []
+
+    def is_demo(self, p):
+        return self.demo and p.get("demo", False)
 
     def price_html(self, p, cls="price"):
         if p.get("price") is None:
@@ -198,20 +251,21 @@ def json_ld(data):
 # Composants
 # --------------------------------------------------------------------------
 def placeholder(word, hex_color, label, caption=None):
-    """Visuel d'attente tant qu'aucune photo n'est fournie : un échantillon de la couleur du produit."""
+    """Visuel d'attente quand un produit n'a pas encore de photo : un échantillon de sa couleur."""
     cap = f"<em>{e(caption or word)}</em>"
     return (f'<div class="ph ph--{tone(hex_color)}" style="--c:{e(hex_color)}" role="img" aria-label="{e(label)} — photo à venir">'
             f'<span class="ph__chip"></span><span class="ph__cap">{cap}<small>Photo à venir</small></span></div>')
 
 
-def media(S, p, color=None, index=0, eager=False, sizes="(min-width:1100px) 25vw, (min-width:768px) 33vw, 50vw"):
+CARD_SIZES = "(min-width:1100px) 25vw, (min-width:768px) 33vw, 50vw"
+
+
+def media(S, p, color=None, index=0, eager=False, sizes=CARD_SIZES, ratio=(4, 5)):
     color = color or (p["colors"][0] if p.get("colors") else None)
     images = S.images_for(p, color)
     label = p["name"] + (f' — {color["name"]}' if color else "")
     if images and index < len(images):
-        load = 'loading="eager" fetchpriority="high"' if eager else 'loading="lazy"'
-        return (f'<img src="{e(S.image_url(images[index]))}" alt="{e(label)}" width="1200" height="1500" '
-                f'{load} decoding="async" sizes="{e(sizes)}">')
+        return S.img(images[index], alt=label, sizes=sizes, eager=eager, ratio=ratio)
     t = S.type_of(p)
     hex_color = color["hex"] if color else "#CFC8BB"
     return placeholder(t["word"], hex_color, label, caption=color["name"] if color else t["word"])
@@ -226,26 +280,25 @@ def color_dots(p, limit=5):
     return f'<ul class="dots" aria-label="{len(colors)} couleurs">{dots}{more}</ul>'
 
 
-def card(S, p, eager=False):
+def card(S, p, eager=False, cls="", sizes=CARD_SIZES):
     href = S.product_url(p)
     t = S.type_of(p)
     images = S.images_for(p)
-    second = ""
-    if len(images) > 1:
-        second = f'<img class="card__alt" src="{e(S.image_url(images[1]))}" alt="" width="1200" height="1500" loading="lazy" decoding="async">'
+    available = p.get("available", True)
+    second = S.img(images[1], sizes=sizes, cls="card__alt") if len(images) > 1 else ""
     badge = ""
-    if not p.get("available", True):
+    if not available:
         badge = '<span class="card__badge card__badge--off">Indisponible</span>'
     elif p.get("badge"):
         badge = f'<span class="card__badge">{e(p["badge"])}</span>'
     add = ""
-    if p.get("available", True):
-        add = (f'<button class="card__add" type="button" data-quick="{e(p["id"])}" '
-               f'aria-label="Ajout rapide : {e(p["name"])}">{icon("plus")}</button>')
-    off = " card--off" if not p.get("available", True) else ""
-    return f'''<article class="card{off}" data-id="{e(p["id"])}">
+    if available:
+        add = (f'<div class="card__add" data-add="{e(p["id"])}"><button class="add__btn" type="button" data-add-btn '
+               f'aria-label="Ajouter au panier : {e(p["name"])}">{icon("plus")}</button></div>')
+    classes = "card" + ("" if available else " card--off") + (f" {cls}" if cls else "")
+    return f'''<article class="{classes}" data-id="{e(p["id"])}">
   <div class="card__frame">
-    <a class="card__media" href="{href}" tabindex="-1" aria-hidden="true">{media(S, p, eager=eager)}{second}</a>
+    <a class="card__media" href="{href}" tabindex="-1" aria-hidden="true">{media(S, p, eager=eager, sizes=sizes)}{second}</a>
     {badge}{add}
   </div>
   <div class="card__body">
@@ -277,6 +330,12 @@ def crumbs_ld(S, trail, path):
     return {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": elements}
 
 
+def section_head(title, link=None, label=None):
+    more = f'<a class="link" href="{link[1]}">{e(link[0])}{icon("arrow")}</a>' if link else ""
+    eyebrow = f'<p class="label">{e(label)}</p>' if label else ""
+    return f'<header class="section__head"><div>{eyebrow}<h2 class="section__title">{e(title)}</h2></div>{more}</header>'
+
+
 # --------------------------------------------------------------------------
 # Ossature commune
 # --------------------------------------------------------------------------
@@ -286,16 +345,19 @@ FONTS = ("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,40
 
 def nav_links(S):
     links = [("Accueil", S.url("/"))]
+    links += [(c["label"], S.cat_url(c["id"])) for c in S.cats]
     if S.new_products:
         links.append(("Nouveautés", S.url("/collection/nouveautes/")))
-    links += [(c["label"], S.cat_url(c["id"])) for c in S.cats]
     return links
 
 
-def header(S, page_id):
+def header(S):
     k = S.c["contact"]
     nav = "".join(f'<li><a href="{href}">{e(label)}</a></li>' for label, href in nav_links(S))
+    demo = (f'<div class="demo-strip"><p><span class="announce__short">{e(S.c["demo"].get("noticeShort", S.c["demo"]["notice"]))}</span>'
+            f'<span class="announce__long">{e(S.c["demo"]["notice"])}</span></p></div>') if S.demo else ""
     return f'''<div class="announce"><p><span class="announce__short">{e(S.c["announcement"]["short"])}</span><span class="announce__long">{e(S.c["announcement"]["long"])}</span></p></div>
+{demo}
 <header class="header" data-header>
   <div class="header__inner">
     <div class="header__left">
@@ -312,13 +374,28 @@ def header(S, page_id):
 </header>'''
 
 
+def tabbar(S, page_id):
+    """Navigation basse sur mobile : tout ce qui compte sous le pouce."""
+    def current(name):
+        return ' aria-current="page"' if name == page_id else ""
+    return f'''<nav class="tabbar" aria-label="Navigation rapide">
+  <a class="tabbar__item" href="{S.url("/")}"{current("home")}>{icon("home")}<span>Accueil</span></a>
+  <a class="tabbar__item" href="{S.url("/collection/")}"{current("collection")}>{icon("grid")}<span>Boutique</span></a>
+  <button class="tabbar__item" type="button" data-open="search">{icon("search")}<span>Recherche</span></button>
+  <a class="tabbar__item" href="{e(S.wa())}" target="_blank" rel="noopener">{icon("whatsapp")}<span>WhatsApp</span></a>
+  <button class="tabbar__item" type="button" data-open="cart" data-cart-button aria-label="Panier">{icon("bag")}<span>Panier</span><span class="tabbar__count" data-cart-count hidden>0</span></button>
+</nav>'''
+
+
 def footer(S):
     k, s = S.c["contact"], S.c["store"]
     cats = "".join(f'<li><a href="{S.cat_url(c["id"])}">{e(c["label"])}</a></li>' for c in S.cats)
     if S.new_products:
-        cats = f'<li><a href="{S.url("/collection/nouveautes/")}">Nouveautés</a></li>' + cats
-    legal = "".join(f'<li><a href="{S.url("/informations/")}#{e(l["id"])}">{e(l["title"])}</a></li>' for l in S.content["legal"])
+        cats += f'<li><a href="{S.url("/collection/nouveautes/")}">Nouveautés</a></li>'
+    legal = f'<li><a href="{S.url("/informations/")}#questions">Questions fréquentes</a></li>'
+    legal += "".join(f'<li><a href="{S.url("/informations/")}#{e(l["id"])}">{e(l["title"])}</a></li>' for l in S.content["legal"])
     year = date.today().year
+    demo = f'<p class="footer__demo">{e(S.c["demo"]["notice"])}.</p>' if S.demo else ""
     return f'''<footer class="footer">
   <div class="wrap">
     <div class="footer__cta">
@@ -336,7 +413,7 @@ def footer(S):
         <h2 class="label">Contact</h2>
         <ul>
           <li><a href="{e(S.wa())}" target="_blank" rel="noopener">WhatsApp · <span class="nw">{e(k["whatsappDisplay"])}</span></a></li>
-          <li><a href="tel:+{e(k["phone"])}">Téléphone · <span class="nw">{e(k["phoneDisplay"])}</span></a></li>
+          <li><a href="tel:+{S.phone}">Téléphone · <span class="nw">{e(k["phoneDisplay"])}</span></a></li>
           <li><a href="{e(k["instagramUrl"])}" target="_blank" rel="noopener">Instagram · <span class="nw">@{e(k["instagramHandle"])}</span></a></li>
         </ul>
       </div>
@@ -351,6 +428,7 @@ def footer(S):
     </div>
     <p class="footer__mark" aria-hidden="true">Prince Shop</p>
     <p class="footer__legal">© {year} Prince Shop · Fès, Maroc</p>
+    {demo}
   </div>
 </footer>'''
 
@@ -370,7 +448,7 @@ def dialogs(S):
     <nav class="menu" aria-label="Menu">
       <ul class="menu__list">
         <li><a class="menu__link" href="{S.url("/")}">Accueil</a></li>
-        {new}{menu_cats}
+        {menu_cats}{new}
         <li><a class="menu__link" href="{S.url("/")}#boutique">La boutique</a></li>
       </ul>
     </nav>
@@ -378,7 +456,7 @@ def dialogs(S):
       <a class="btn btn--primary btn--block" href="{e(S.wa())}" target="_blank" rel="noopener">{icon("whatsapp")}Écrire sur WhatsApp</a>
       <ul class="menu__meta">
         <li><a href="{e(k["instagramUrl"])}" target="_blank" rel="noopener">Instagram · @{e(k["instagramHandle"])}</a></li>
-        <li><a href="tel:+{e(k["phone"])}">Téléphone · {e(k["phoneDisplay"])}</a></li>
+        <li><a href="tel:+{S.phone}">Téléphone · {e(k["phoneDisplay"])}</a></li>
         <li><a href="{e(s["mapsUrl"])}" target="_blank" rel="noopener">{e(s["addressLine1"])}, {e(s["city"])}</a></li>
       </ul>
     </div>
@@ -415,12 +493,15 @@ def dialogs(S):
 </dialog>'''
 
 
-def layout(S, *, page_id, title, description, path, body, ld=(), og_image=None, noindex=False, og_type="website"):
+def layout(S, *, page_id, title, description, path, body, ld=(), og_image=None, noindex=False, og_type="website", bar=True):
     site = S.c["site"]
     canonical = S.abs(path)
     image = og_image or S.abs("/assets/brand/og.png")
     robots = '<meta name="robots" content="noindex, follow">' if noindex or site.get("noindex") else ""
     ld_html = "\n".join(json_ld(x) for x in ld)
+    preconnect = '<link rel="preconnect" href="https://images.unsplash.com">' if any(
+        as_image(i)["src"].startswith(UNSPLASH) for p in S.products for i in S.images_for(p)) else ""
+    bottom = tabbar(S, page_id) if bar else ""
     return f'''<!doctype html>
 <html lang="{e(site["lang"])}">
 <head>
@@ -443,16 +524,17 @@ def layout(S, *, page_id, title, description, path, body, ld=(), og_image=None, 
 <link rel="icon" href="{S.url("/assets/brand/favicon.svg")}" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{preconnect}
 <link rel="stylesheet" href="{FONTS}">
 <link rel="stylesheet" href="{S.asset("css/main.css")}">
 <script>document.documentElement.classList.add("js")</script>
 <script type="module" src="{S.asset("js/main.js")}"></script>
 {ld_html}
 </head>
-<body data-page="{page_id}" data-base="{e(S.base)}">
+<body data-page="{page_id}" data-base="{e(S.base)}"{" data-tabbar" if bar else ""}>
 <a class="skip" href="#contenu">Aller au contenu</a>
 {sprite()}
-{french_spaces(header(S, page_id) + body + footer(S) + dialogs(S))}
+{french_spaces(header(S) + body + footer(S) + dialogs(S) + bottom)}
 <a class="wa-float" href="{e(S.wa())}" target="_blank" rel="noopener" aria-label="Écrire à Prince Shop sur WhatsApp" data-wa-float>{icon("whatsapp")}</a>
 <div class="toast" data-toast role="status" aria-live="polite"></div>
 </body>
@@ -464,27 +546,26 @@ def layout(S, *, page_id, title, description, path, body, ld=(), og_image=None, 
 # Accueil
 # --------------------------------------------------------------------------
 def store_ld(S):
-    site, k, s = S.c["site"], S.c["contact"], S.c["store"]
+    site, s = S.c["site"], S.c["store"]
     data = {
         "@context": "https://schema.org",
         "@type": "Store",
         "@id": S.abs("/") + "#boutique",
         "name": site["name"],
         "url": S.abs("/"),
-        "telephone": "+" + k["phone"],
+        "telephone": "+" + S.phone,
         "address": {
             "@type": "PostalAddress",
             "streetAddress": s["addressLine1"],
             "addressLocality": s["city"],
-            "postalCode": s["postalCode"],
             "addressCountry": s["countryCode"],
         },
         "geo": {"@type": "GeoCoordinates", "latitude": s["lat"], "longitude": s["lng"]},
         "hasMap": s["mapsUrl"],
-        "sameAs": [k["instagramUrl"]],
+        "sameAs": [S.c["contact"]["instagramUrl"]],
         "areaServed": {"@type": "Country", "name": "Maroc"},
     }
-    if s["hours"].get("opens"):
+    if s["hours"].get("confirmed") and s["hours"].get("opens"):
         data["openingHoursSpecification"] = [{
             "@type": "OpeningHoursSpecification",
             "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -493,25 +574,22 @@ def store_ld(S):
     return data
 
 
-def section_head(title, link=None, label=None):
-    more = f'<a class="link" href="{link[1]}">{e(link[0])}{icon("arrow")}</a>' if link else ""
-    eyebrow = f'<p class="label">{e(label)}</p>' if label else ""
-    return f'<header class="section__head"><div>{eyebrow}<h2 class="section__title">{e(title)}</h2></div>{more}</header>'
-
-
 def hero(S):
     h = S.c["hero"]
+    links = [S.by_id[i] for i in h.get("links", []) if i in S.by_id]
     tiles = []
     if h.get("images"):
-        for i, rel in enumerate(h["images"][:2]):
-            load = 'loading="eager" fetchpriority="high"' if i == 0 else 'loading="lazy"'
-            tiles.append(f'<a class="hero__img hero__img--{"ab"[i]}" href="{S.url("/collection/")}" tabindex="-1" aria-hidden="true">'
-                         f'<img src="{S.base}/assets/{e(quote(rel))}" alt="" width="1200" height="1500" {load} decoding="async"></a>')
+        for i, image in enumerate(h["images"][:2]):
+            target = S.product_url(links[i]) if i < len(links) else S.url("/collection/")
+            label = links[i]["name"] if i < len(links) else "Voir la collection"
+            ratio = (4, 5) if i == 0 else (3, 4)
+            tiles.append(f'<a class="hero__img hero__img--{"ab"[i]}" href="{target}" aria-label="{e(label)}">'
+                         f'{S.img(image, sizes="(min-width:1024px) 40vw, 68vw", eager=True, ratio=ratio, folder="")}</a>')
     else:
-        picks = [S.by_id[i] for i in h.get("productIds", []) if i in S.by_id][:2] or S.by_date()[:2]
-        for i, p in enumerate(picks):
+        for i, p in enumerate(links[:2] or S.by_date()[:2]):
             tiles.append(f'<a class="hero__img hero__img--{"ab"[i]}" href="{S.product_url(p)}" aria-label="{e(p["name"])}">'
-                         f'{media(S, p, eager=i == 0, sizes="(min-width:1024px) 40vw, 70vw")}</a>')
+                         f'{media(S, p, eager=i == 0, sizes="(min-width:1024px) 40vw, 68vw")}</a>')
+    facts = "".join(f"<li>{e(f)}</li>" for f in h.get("facts", []))
     return f'''<section class="hero">
   <div class="wrap hero__grid">
     <div class="hero__visual">{"".join(tiles)}</div>
@@ -523,48 +601,57 @@ def hero(S):
         <a class="btn btn--primary" href="{S.url("/collection/")}">Découvrir la collection</a>
         <a class="btn btn--ghost" href="{e(S.wa())}" target="_blank" rel="noopener">{icon("whatsapp")}Commander sur WhatsApp</a>
       </div>
+      {f'<ul class="hero__facts">{facts}</ul>' if facts else ""}
     </div>
   </div>
 </section>'''
 
 
-def trust(S):
-    items = "".join(f'<li>{icon(t["icon"])}<p><strong>{e(t["title"])}</strong><span>{e(t["text"])}</span></p></li>' for t in S.c["trust"])
-    return f'<section class="trust" aria-label="Bon à savoir"><ul class="wrap trust__list">{items}</ul></section>'
-
-
-def category_tiles(S):
+def worlds(S):
+    """Les catégories comme des univers : grande image, nom en grand, un seul geste."""
     tiles = []
-    for i, c in enumerate(S.cats, 1):
+    for i, c in enumerate(S.cats):
         items = [p for p in S.by_date() if p["category"] == c["id"]]
         with_photo = next((p for p in items if S.images_for(p)), None)
+        sizes = "(min-width:768px) 50vw, 100vw"
         if c.get("image"):
-            visual = f'<img src="{S.base}/assets/{e(quote(c["image"]))}" alt="" width="1600" height="1200" loading="lazy" decoding="async">'
+            visual = S.img(c["image"], sizes=sizes, ratio=None, folder="")
         elif with_photo:
-            visual = media(S, with_photo, sizes="(min-width:768px) 50vw, 100vw")
+            visual = S.img(S.images_for(with_photo)[0], sizes=sizes, ratio=None)
         else:
-            chips = []
-            for p in items:
-                for col in p.get("colors", [])[:2]:
-                    chips.append(col["hex"])
-            seen = list(dict.fromkeys(chips))[:8]
+            seen = list(dict.fromkeys(col["hex"] for p in items for col in p.get("colors", [])[:2]))[:8]
             visual = '<div class="mosaic" aria-hidden="true">' + "".join(f'<span style="--c:{e(x)}"></span>' for x in seen) + "</div>"
-        types = "".join(f'<li><a href="{S.cat_url(c["id"], t["id"])}">{e(t["label"])}</a></li>' for t in c["types"])
         n = c["count"]
-        tiles.append(f'''<article class="cat">
-  <a class="cat__media" href="{S.cat_url(c["id"])}" tabindex="-1" aria-hidden="true">{visual}</a>
-  <div class="cat__body">
-    <p class="label">{i:02d} — {n} modèle{"s" if n > 1 else ""}</p>
-    <h3 class="cat__name"><a href="{S.cat_url(c["id"])}">{e(c["label"])}{icon("arrow")}</a></h3>
-    {"<ul class=cat__types>" + types + "</ul>" if types else ""}
-  </div>
-</article>''')
+        tiles.append(f'''<a class="world world--{"abc"[min(i, 2)]}" href="{S.cat_url(c["id"])}">
+  {visual}
+  <span class="world__body">
+    <span class="world__count">{n} modèle{"s" if n > 1 else ""}</span>
+    <span class="world__name">{e(c["label"])}</span>
+    <span class="world__cta">Voir la sélection{icon("arrow")}</span>
+  </span>
+</a>''')
     if not tiles:
         return ""
+    return f'''<section class="section section--first">
+  <div class="wrap">
+    <h2 class="sr-only">Catégories</h2>
+    <div class="worlds worlds--{min(len(tiles), 3)}">{"".join(tiles)}</div>
+  </div>
+</section>'''
+
+
+def selection(S, picks):
+    """Sélection du moment : un produit en grand, quatre autour."""
+    if len(picks) < 2:
+        return ""
+    cards = "".join(
+        card(S, p, eager=False, cls="card--xl" if i == 0 and len(picks) >= 5 else "",
+             sizes="(min-width:768px) 50vw, 100vw" if i == 0 else CARD_SIZES)
+        for i, p in enumerate(picks))
     return f'''<section class="section">
   <div class="wrap">
-    {section_head("Par catégorie")}
-    <div class="cats cats--{min(len(tiles), 3)}">{"".join(tiles)}</div>
+    {section_head("Sélection du moment", ("Toute la collection", S.url("/collection/")))}
+    <div class="grid grid--feature">{cards}</div>
   </div>
 </section>'''
 
@@ -575,15 +662,19 @@ def spotlight(S):
     if not p:
         return ""
     colors = p.get("colors", [])
-    if len(colors) >= 3 and not S.images_for(p):
+    palette = ""
+    if len(colors) >= 3:
         stripes = "".join(
             f'<a class="stripe stripe--{tone(c["hex"])}" style="--c:{e(c["hex"])}" href="{S.product_url(p)}?couleur={slug(c["name"])}">'
             f'<span>{e(c["name"])}</span></a>' for c in colors)
-        visual = f'<div class="palette" aria-label="Couleurs disponibles">{stripes}</div>'
-    else:
-        visual = f'<a class="spot__photo" href="{S.product_url(p)}" tabindex="-1" aria-hidden="true">{media(S, p, sizes="(min-width:1024px) 50vw, 100vw")}</a>'
-    return f'''<section class="spot">
+        palette = f'<div class="palette" aria-label="Couleurs disponibles">{stripes}</div>'
+    photo = ""
+    if S.images_for(p):
+        photo = (f'<a class="spot__photo" href="{S.product_url(p)}" tabindex="-1" aria-hidden="true">'
+                 f'{media(S, p, sizes="(min-width:1024px) 34vw, 100vw")}</a>')
+    return f'''<section class="spot{" spot--photo" if photo else ""}">
   <div class="wrap spot__grid">
+    {photo}
     <div class="spot__text">
       <p class="label">{e(sp.get("eyebrow", "Le modèle du moment"))}</p>
       <h2 class="spot__title">{e(sp.get("title", p["name"]))} <em>{e(sp.get("titleAccent", ""))}</em></h2>
@@ -591,37 +682,28 @@ def spotlight(S):
       <p class="spot__meta">{e(p["name"])} · {S.price_html(p)}</p>
       <a class="btn btn--light" href="{S.product_url(p)}">Voir le modèle</a>
     </div>
-    {visual}
+    {palette}
   </div>
 </section>'''
 
 
-def instagram(S):
-    ig, k = S.c["instagram"], S.c["contact"]
-    posts = ig.get("posts", [])
-    with_images = [p for p in posts if p.get("image")]
-    if with_images:
-        tiles = "".join(
-            f'<a class="reel" href="{e(p["url"])}" target="_blank" rel="noopener">'
-            f'<img src="{S.base}/assets/{e(quote(p["image"]))}" alt="{e(p["label"])} — voir le reel sur Instagram" width="720" height="1280" loading="lazy" decoding="async">'
-            f'<span class="reel__label">{icon("play")}{e(p["label"])}</span></a>' for p in with_images)
-        listing = f'<div class="reels">{tiles}</div>'
-    else:
-        rows = "".join(
-            f'<li><a href="{e(p["url"])}" target="_blank" rel="noopener"><span class="reel-row__play">{icon("play")}</span>'
-            f'<span class="reel-row__label">{e(p["label"])}</span><span class="reel-row__date">{e(fr_date(p.get("date")))}</span>{icon("arrow-out")}</a></li>'
-            for p in posts)
-        listing = f'<ul class="reel-rows">{rows}</ul>' if rows else ""
-    return f'''<section class="section insta">
-  <div class="wrap insta__grid">
-    <div class="insta__text">
-      <p class="label">{e(ig["title"])}</p>
-      <h2 class="insta__handle"><a href="{e(k["instagramUrl"])}" target="_blank" rel="noopener">@{e(k["instagramHandle"])}</a></h2>
-      <p class="insta__lede">{e(ig["text"])}</p>
-      <a class="btn btn--ghost" href="{e(k["instagramUrl"])}" target="_blank" rel="noopener">{icon("instagram")}Voir sur Instagram</a>
-    </div>
-    {listing}
+def rail(S, title, items, link):
+    """Rangée horizontale : beaucoup de produits, peu de hauteur."""
+    if len(items) < 3:
+        return ""
+    cards = "".join(card(S, p, sizes="(min-width:1024px) 22vw, 46vw") for p in items)
+    return f'''<section class="section section--rail">
+  <div class="wrap">
+    <header class="section__head">
+      <div><h2 class="section__title">{e(title)}</h2></div>
+      <div class="rail__nav">
+        <a class="link" href="{link[1]}">{e(link[0])}{icon("arrow")}</a>
+        <button class="rail__btn" type="button" data-rail-prev aria-label="Produits précédents">{icon("arrow")}</button>
+        <button class="rail__btn" type="button" data-rail-next aria-label="Produits suivants">{icon("arrow")}</button>
+      </div>
+    </header>
   </div>
+  <div class="rail" data-rail>{cards}</div>
 </section>'''
 
 
@@ -635,26 +717,37 @@ def fr_date(iso):
     return f"{int(d)} {MONTHS[int(m) - 1]} {y}"
 
 
-def store_section(S):
-    s, k, about = S.c["store"], S.c["contact"], S.content["about"]
-    hours_note = "" if s["hours"].get("confirmed") else f'<small>Horaires indiqués sur {e(s["hours"]["source"])}</small>'
-    return f'''<section class="section store" id="boutique">
-  <div class="wrap store__grid">
-    <div class="store__intro">
-      <p class="label">La boutique</p>
-      <h2 class="section__title">{e(about["title"])}</h2>
-      <p class="store__lede">{e(about["text"])}</p>
-      <div class="store__cta">
-        <a class="btn btn--primary" href="{e(s["mapsUrl"])}" target="_blank" rel="noopener">{icon("pin")}Itinéraire</a>
-        <a class="btn btn--ghost" href="{e(S.wa())}" target="_blank" rel="noopener">{icon("whatsapp")}WhatsApp</a>
+def instagram(S):
+    ig, k = S.c["instagram"], S.c["contact"]
+    posts = ig.get("posts", [])
+    rows = "".join(
+        f'<li><a href="{e(p["url"])}" target="_blank" rel="noopener"><span class="reel-row__play">{icon("play")}</span>'
+        f'<span class="reel-row__label">{e(p["label"])}</span><span class="reel-row__date">{e(fr_date(p.get("date")))}</span>{icon("arrow-out")}</a></li>'
+        for p in posts)
+    listing = f'<ul class="reel-rows">{rows}</ul>' if rows else ""
+    # Mosaïque : les vignettes des reels si elles sont fournies, sinon des visuels du catalogue.
+    tiles = [(S.img(p["image"], alt=p["label"], sizes="(min-width:900px) 16vw, 33vw", ratio=(1, 1), folder=""), p["url"])
+             for p in posts if p.get("image")]
+    if len(tiles) < 3:
+        shown = set(S.c["hero"].get("links", []))
+        pool = [p for p in S.products if p["id"] not in shown and S.images_for(p)]
+        tiles = [(S.img(S.images_for(p)[0], sizes="(min-width:900px) 16vw, 33vw", ratio=(1, 1)), k["instagramUrl"]) for p in pool[1::2][:6]]
+    mosaic = ""
+    if len(tiles) >= 3:
+        cells = "".join(f'<a href="{e(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">{image}</a>' for image, url in tiles[:6])
+        mosaic = f'<div class="insta__mosaic">{cells}</div>'
+    return f'''<section class="section insta">
+  <div class="wrap">
+    <div class="insta__grid">
+      <div class="insta__text">
+        <p class="label">{e(ig["title"])}</p>
+        <h2 class="insta__handle"><a href="{e(k["instagramUrl"])}" target="_blank" rel="noopener">@{e(k["instagramHandle"])}</a></h2>
+        <p class="insta__lede">{e(ig["text"])}</p>
+        <a class="btn btn--ghost" href="{e(k["instagramUrl"])}" target="_blank" rel="noopener">{icon("instagram")}Voir sur Instagram</a>
       </div>
+      {listing}
     </div>
-    <dl class="facts">
-      <div><dt class="label">Adresse</dt><dd>{e(s["addressLine1"])}<br>{e(s["addressLine2"])}<br><a class="link" href="{e(s["mapsUrl"])}" target="_blank" rel="noopener">Voir sur Google Maps{icon("arrow-out")}</a></dd></div>
-      <div><dt class="label">Horaires</dt><dd>{e(s["hours"]["label"])}{hours_note}</dd></div>
-      <div><dt class="label">Téléphone</dt><dd><a href="tel:+{e(k["phone"])}">{e(k["phoneDisplay"])}</a></dd></div>
-      <div><dt class="label">WhatsApp</dt><dd><a href="{e(S.wa())}" target="_blank" rel="noopener">{e(k["whatsappDisplay"])}</a></dd></div>
-    </dl>
+    {mosaic}
   </div>
 </section>'''
 
@@ -671,57 +764,48 @@ def how_to(S):
 </section>'''
 
 
-def faq(S):
-    items = "".join(f'<details class="acc__item"><summary>{e(f["q"])}{icon("plus")}</summary><div class="acc__body"><p>{e(S.fill(f["a"]))}</p></div></details>'
-                    for f in S.content["faq"])
-    return f'''<section class="section faq" id="questions">
-  <div class="wrap faq__grid">
-    <div>
-      {section_head("Questions fréquentes")}
-      <p class="faq__lede">Une autre question ? <a class="link" href="{e(S.wa())}" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp{icon("arrow-out")}</a></p>
+def store_section(S):
+    s, k, about = S.c["store"], S.c["contact"], S.content["about"]
+    hours_note = "" if s["hours"].get("confirmed") else f'<small>Horaires indiqués sur {e(s["hours"]["source"])}</small>'
+    return f'''<section class="section store" id="boutique">
+  <div class="wrap store__grid">
+    <div class="store__intro">
+      <p class="label">La boutique</p>
+      <h2 class="section__title">{e(about["title"])}</h2>
+      <p class="store__lede">{e(about["text"])}</p>
+      <div class="store__cta">
+        <a class="btn btn--primary" href="{e(s["mapsUrl"])}" target="_blank" rel="noopener">{icon("pin")}Itinéraire</a>
+        <a class="btn btn--ghost" href="{e(S.wa())}" target="_blank" rel="noopener">{icon("whatsapp")}WhatsApp</a>
+        <a class="btn btn--ghost" href="tel:+{S.phone}">{icon("phone")}Appeler</a>
+      </div>
     </div>
-    <div class="acc">{items}</div>
+    <dl class="facts">
+      <div><dt class="label">Adresse</dt><dd>{e(s["addressLine1"])}<br>{e(s["addressLine2"])}<br><a class="link" href="{e(s["mapsUrl"])}" target="_blank" rel="noopener">Voir sur Google Maps{icon("arrow-out")}</a></dd></div>
+      <div><dt class="label">Horaires</dt><dd>{e(s["hours"]["label"])}{hours_note}</dd></div>
+      <div><dt class="label">Téléphone</dt><dd><a href="tel:+{S.phone}">{e(k["phoneDisplay"])}</a></dd></div>
+      <div><dt class="label">WhatsApp</dt><dd><a href="{e(S.wa())}" target="_blank" rel="noopener">{e(k["whatsappDisplay"])}</a></dd></div>
+    </dl>
   </div>
 </section>'''
 
 
 def page_home(S):
+    home = S.c.get("home") or {}
+    spot_id = (S.c.get("spotlight") or {}).get("productId")
+    picks = [S.by_id[i] for i in home.get("selection", []) if i in S.by_id]
+    if not picks:
+        picks = [p for p in S.products if p.get("featured") and p["id"] != spot_id]
+    picks = [p for p in picks if p.get("available", True)][:5]
     newest = S.new_products or S.by_date()
-    n_new = 8 if len(S.products) >= 24 else 4
-    row_new = newest[:n_new]
-    shown = {p["id"] for p in row_new} | {(S.c.get("spotlight") or {}).get("productId")}
-    picks = [p for p in S.products if p.get("featured") and p["id"] not in shown][:4]
-    if picks and len(picks) < 4:  # on complète la rangée avec les autres articles pas encore montrés
-        rest = [p for p in S.by_date() if p["id"] not in shown and p not in picks and p.get("available", True)]
-        picks += rest[:4 - len(picks)]
-    new_html = ""
-    if row_new:
-        link = ("Tout voir", S.url("/collection/nouveautes/")) if S.new_products else ("Tout voir", S.url("/collection/"))
-        new_html = f'''<section class="section section--first">
-  <div class="wrap">
-    {section_head("Nouveautés", link)}
-    <div class="grid">{"".join(card(S, p, eager=i < 2) for i, p in enumerate(row_new))}</div>
-  </div>
-</section>'''
-    picks_html = ""
-    if len(picks) >= 2:
-        picks_html = f'''<section class="section">
-  <div class="wrap">
-    {section_head("La sélection", ("Toute la collection", S.url("/collection/")))}
-    <div class="grid">{"".join(card(S, p) for p in picks)}</div>
-  </div>
-</section>'''
     body = f'''<main id="contenu">
 {hero(S)}
-{trust(S)}
-{new_html}
-{category_tiles(S)}
+{worlds(S)}
+{selection(S, picks)}
 {spotlight(S)}
-{picks_html}
+{rail(S, "Nouveautés", newest[:10], ("Tout voir", S.url("/collection/nouveautes/") if S.new_products else S.url("/collection/")))}
 {instagram(S)}
-{store_section(S)}
 {how_to(S)}
-{faq(S)}
+{store_section(S)}
 </main>'''
     site = S.c["site"]
     website = {"@context": "https://schema.org", "@type": "WebSite", "name": site["name"], "url": S.abs("/")}
@@ -741,9 +825,9 @@ def page_collection(S, *, scope, path, title, heading, intro, items, trail):
         chips_html = f'<div class="chips" role="group" aria-label="Type d\'article">{"".join(chips)}</div>' if len(cat["types"]) > 1 else ""
     else:
         links = [f'<a class="chip{" is-active" if not scope else ""}" href="{S.url("/collection/")}">Tout</a>']
+        links += [f'<a class="chip" href="{S.cat_url(c["id"])}">{e(c["label"])}</a>' for c in S.cats]
         if S.new_products:
             links.append(f'<a class="chip{" is-active" if scope.get("new") else ""}" href="{S.url("/collection/nouveautes/")}">Nouveautés</a>')
-        links += [f'<a class="chip" href="{S.cat_url(c["id"])}">{e(c["label"])}</a>' for c in S.cats]
         chips_html = f'<nav class="chips" aria-label="Catégories">{"".join(links)}</nav>'
     cards = "".join(card(S, p, eager=i < 4) for i, p in enumerate(items))
     n = len(items)
@@ -760,7 +844,7 @@ def page_collection(S, *, scope, path, title, heading, intro, items, trail):
         <p class="toolbar__count" aria-live="polite"><span data-count>{n}</span> <span data-count-label>article{"s" if n > 1 else ""}</span></p>
         <div class="toolbar__actions">
           <button class="toolbar__btn" type="button" data-open="filters">{icon("filter")}Filtrer<span class="toolbar__n" data-filter-count hidden></span></button>
-          <label class="toolbar__sort"><span class="sr-only">Trier par</span>
+          <label class="toolbar__sort"><span class="toolbar__sort-label">Trier</span>
             <select data-sort aria-label="Trier par">
               <option value="nouveautes">Nouveautés</option>
               <option value="prix-asc">Prix croissant</option>
@@ -805,6 +889,9 @@ def page_collection(S, *, scope, path, title, heading, intro, items, trail):
 # --------------------------------------------------------------------------
 # Fiche produit
 # --------------------------------------------------------------------------
+PDP_SIZES = "(min-width:1024px) 45vw, 100vw"
+
+
 def product_message(S, p, color=None, size=None):
     m = S.c["messages"]
     bits = [p["name"]]
@@ -815,6 +902,31 @@ def product_message(S, p, color=None, size=None):
     return f'{m["greeting"]}\n\n{m["productIntro"]}\n• {" — ".join(bits)} (réf. {p["ref"]})\n\n{m["productClosing"]}'
 
 
+def gallery(S, p, color):
+    images = S.images_for(p, color)
+    label = p["name"] + (f' — {color["name"]}' if color else "")
+    if images:
+        slides = "".join(
+            f'<figure class="gallery__slide"><button class="gallery__zoom" type="button" data-zoom="{i}" aria-label="Agrandir la photo {i + 1}">'
+            f'{S.img(image, alt=label, sizes=PDP_SIZES, eager=i == 0)}{icon("expand")}</button></figure>'
+            for i, image in enumerate(images))
+        thumbs = "".join(
+            f'<button type="button" data-thumb="{i}" aria-label="Photo {i + 1}"{" aria-current=true" if i == 0 else ""}>'
+            f'<img src="{e(S.sources(image)["thumb"])}" alt="" width="64" height="80" loading="lazy" decoding="async"></button>'
+            for i, image in enumerate(images))
+    else:
+        slides = f'<figure class="gallery__slide">{media(S, p, color, eager=True)}</figure>'
+        thumbs = ""
+    n = max(len(images), 1)
+    demo = f'<span class="gallery__demo">{e(S.c["demo"]["imageLabel"])}</span>' if S.is_demo(p) and images else ""
+    return f'''<div class="gallery gallery--{min(n, 2)}" data-gallery>
+  <div class="gallery__track" data-track>{slides}</div>
+  <p class="gallery__count" data-gallery-count aria-hidden="true"{" hidden" if n < 2 else ""}>1 / {n}</p>
+  <div class="gallery__thumbs" data-thumbs{" hidden" if n < 2 else ""}>{thumbs}</div>
+  {demo}
+</div>'''
+
+
 def page_product(S, p):
     cat = S.cat_by_id[p["category"]]
     t = S.type_of(p)
@@ -822,23 +934,14 @@ def page_product(S, p):
     colors = p.get("colors", [])
     first = colors[0] if colors else None
     available = p.get("available", True)
-    images = S.images_for(p, first)
     trail = [("Accueil", S.url("/")), (cat["label"], S.cat_url(cat["id"])), (p["name"], None)]
 
-    if images:
-        slides = "".join(
-            f'<figure class="gallery__slide">{media(S, p, first, i, eager=i == 0, sizes="(min-width:1024px) 45vw, 100vw")}</figure>'
-            for i in range(len(images)))
-    else:
-        slides = f'<figure class="gallery__slide">{media(S, p, first, eager=True)}</figure>'
-    n_slides = max(len(images), 1)
-    gallery = f'''<div class="gallery gallery--{min(n_slides, 2)}" data-gallery>
-  <div class="gallery__track" data-track>{slides}</div>
-  <p class="gallery__count" data-gallery-count aria-hidden="true"{" hidden" if n_slides < 2 else ""}>1 / {n_slides}</p>
-</div>'''
-
     color_group = ""
-    if colors:
+    if len(colors) == 1:
+        color_group = (f'<p class="picker__static"><span>Couleur</span><b>{e(first["name"])}</b>'
+                       f'<i class="dot dot--{tone(first["hex"])}" style="--c:{e(first["hex"])}"></i>'
+                       f'<input type="hidden" name="color" value="{e(first["name"])}"></p>')
+    elif colors:
         swatches = "".join(
             f'<label class="swatch"><input type="radio" name="color" value="{e(c["name"])}"{" checked" if i == 0 else ""}{"" if available else " disabled"}>'
             f'<span class="swatch__dot dot--{tone(c["hex"])}" style="--c:{e(c["hex"])}"></span><span class="sr-only">{e(c["name"])}</span></label>'
@@ -847,6 +950,7 @@ def page_product(S, p):
         color_group = f'''<fieldset class="picker__group">
   <legend><span>Couleur</span><b data-color-name>{e(first["name"])}</b></legend>
   <div class="swatches">{swatches}</div>
+  <p class="picker__note picker__note--photo" data-photo-note hidden></p>
   {note}
 </fieldset>'''
 
@@ -867,14 +971,19 @@ def page_product(S, p):
 </fieldset>'''
 
     if available:
-        add_btn = '<button class="btn btn--primary btn--block" type="submit" data-add>Ajouter au panier</button>'
+        add_btn = '<button class="btn btn--primary btn--block" type="submit" data-add><span data-add-label>Ajouter au panier</span></button>'
         wa_label = "Commander via WhatsApp"
     else:
         add_btn = '<button class="btn btn--primary btn--block" type="button" disabled>Indisponible pour le moment</button>'
         wa_label = "Demander sur WhatsApp"
     wa_href = S.wa(product_message(S, p, first["name"] if first else None))
 
-    price_note = '<p class="pdp__note">Le prix vous est confirmé sur WhatsApp.</p>' if p.get("price") is None else ""
+    if p.get("price") is None:
+        price_note = '<p class="pdp__note">Le prix vous est confirmé sur WhatsApp.</p>'
+    elif S.is_demo(p):
+        price_note = f'<p class="pdp__note">{e(S.c["demo"]["priceNote"])}</p>'
+    else:
+        price_note = ""
     details = ""
     if p.get("details"):
         lis = "".join(f"<li>{e(d)}</li>" for d in p["details"])
@@ -890,7 +999,7 @@ def page_product(S, p):
     related_html = ""
     if len(related) >= 2:
         related_html = f'''<section class="section related">
-  {section_head("Vous aimerez aussi", (cat["label"], S.cat_url(cat["id"])))}
+  {section_head("Vous pourriez aussi aimer", (cat["label"], S.cat_url(cat["id"])))}
   <div class="grid">{"".join(card(S, x) for x in related)}</div>
 </section>'''
 
@@ -898,7 +1007,7 @@ def page_product(S, p):
   <div class="wrap">
     {crumbs(S, trail)}
     <div class="pdp__grid">
-      {gallery}
+      {gallery(S, p, first)}
       <div class="pdp__info">
         <p class="label">{e(t["label"])}{' · <span class="pdp__new">' + e(p["badge"]) + "</span>" if p.get("badge") and available else ""}</p>
         <h1 class="pdp__name">{e(p["name"])}</h1>
@@ -928,22 +1037,40 @@ def page_product(S, p):
     {related_html}
   </div>
   <div class="buybar" data-buybar hidden>
+    <button class="buybar__cart" type="button" data-open="cart" data-cart-button aria-label="Panier">{icon("bag")}<span class="buybar__count" data-cart-count hidden>0</span></button>
     <p class="buybar__info"><strong>{e(p["name"])}</strong><span data-buybar-variant>{S.price_html(p)}</span></p>
     <button class="btn btn--primary" type="button" data-buybar-add{"" if available else " disabled"}>{"Ajouter" if available else "Indisponible"}</button>
   </div>
-</main>'''
+</main>
+<dialog class="sheet sheet--zoom" id="zoom" aria-label="Photo agrandie">
+  <div class="sheet__panel zoom">
+    <div class="zoom__bar">
+      <p class="zoom__count" data-zoom-count></p>
+      <button class="header__btn" type="button" data-close aria-label="Fermer la photo">{icon("close")}</button>
+    </div>
+    <div class="zoom__stage" data-zoom-stage><img data-zoom-img alt="" decoding="async"></div>
+    <div class="zoom__nav">
+      <button class="rail__btn" type="button" data-zoom-prev aria-label="Photo précédente">{icon("arrow")}</button>
+      <p class="zoom__hint" data-zoom-hint>Touchez la photo pour zoomer</p>
+      <button class="rail__btn" type="button" data-zoom-next aria-label="Photo suivante">{icon("arrow")}</button>
+    </div>
+  </div>
+</dialog>'''
 
     ld = {
         "@context": "https://schema.org", "@type": "Product",
         "name": p["name"], "description": p.get("description", ""), "sku": p["ref"],
         "category": f'{cat["label"]} > {t["label"]}', "url": S.abs(path),
     }
-    all_images = [S.origin + S.image_url(i) for i in S.images_for(p)]
+    all_images = []
+    for image in S.images_for(p):
+        full = S.sources(image)["full"]
+        all_images.append(full if is_remote(full) else S.origin + full)
     if all_images:
         ld["image"] = all_images
     if colors:
         ld["color"] = ", ".join(c["name"] for c in colors)
-    if p.get("price") is not None:
+    if p.get("price") is not None and not S.is_demo(p):
         ld["offers"] = {
             "@type": "Offer", "price": str(p["price"]), "priceCurrency": S.c["site"]["currencyCode"],
             "url": S.abs(path), "seller": {"@id": S.abs("/") + "#boutique"},
@@ -953,7 +1080,7 @@ def page_product(S, p):
     price_txt = f' — {fmt_price(p["price"])} {S.c["site"]["currency"]}' if p.get("price") is not None else ""
     title = f'{p["name"]}{price_txt} | Prince Shop Fès'
     desc = f'{p.get("description", p["name"])} Livraison partout au Maroc, commande sur WhatsApp.'.strip()
-    return layout(S, page_id="product", title=title, description=desc, path=path, body=body,
+    return layout(S, page_id="product", title=title, description=desc, path=path, body=body, bar=False,
                   ld=[crumbs_ld(S, trail, path), ld], og_image=all_images[0] if all_images else None, og_type="product")
 
 
@@ -961,8 +1088,9 @@ def page_product(S, p):
 # Commande
 # --------------------------------------------------------------------------
 def page_checkout(S):
-    k, d, pay = S.c["contact"], S.c["delivery"], S.c["payment"]
+    k, pay = S.c["contact"], S.c["payment"]
     cities = "".join(f'<option value="{e(c)}">' for c in S.c["cities"])
+    demo = f'<p class="co__demo">{e(S.c["demo"]["checkoutNote"])}</p>' if S.demo else ""
     body = f'''<main id="contenu" class="co" data-checkout>
   <div class="wrap co__wrap">
     <header class="co__head">
@@ -1011,15 +1139,15 @@ def page_checkout(S):
         </section>
 
         <section data-step="review" tabindex="-1" hidden>
-          <h2 class="co__h2">Tout est bon ?</h2>
+          <h2 class="co__h2">Confirmer la commande</h2>
           <div class="review">
-            <div class="review__block">
-              <div class="review__top"><h3 class="label">Vos informations</h3><button class="link" type="button" data-edit>Modifier</button></div>
-              <dl class="review__dl" data-review-customer></dl>
-            </div>
             <div class="review__block">
               <div class="review__top"><h3 class="label">Votre sélection</h3><button class="link" type="button" data-open="cart">Modifier</button></div>
               <div data-review-items></div>
+            </div>
+            <div class="review__block">
+              <div class="review__top"><h3 class="label">Vos informations</h3><button class="link" type="button" data-edit>Modifier</button></div>
+              <dl class="review__dl" data-review-customer></dl>
             </div>
           </div>
           <div class="next">
@@ -1030,7 +1158,8 @@ def page_checkout(S):
               <li>{e(pay["note"])}</li>
             </ol>
           </div>
-          <a class="btn btn--wa btn--block" href="#" target="_blank" rel="noopener" data-send>{icon("whatsapp")}Confirmer &amp; envoyer sur WhatsApp</a>
+          {demo}
+          <a class="btn btn--wa btn--block" href="#" target="_blank" rel="noopener" data-send>{icon("whatsapp")}Envoyer la commande sur WhatsApp</a>
           <details class="msg"><summary>Voir le message qui sera envoyé</summary><pre data-message></pre></details>
         </section>
 
@@ -1042,7 +1171,7 @@ def page_checkout(S):
             <a class="btn btn--ghost" href="#" target="_blank" rel="noopener" data-resend>{icon("whatsapp")}Rouvrir WhatsApp</a>
             <button class="btn btn--ghost" type="button" data-copy>Copier le message</button>
           </div>
-          <p class="sent__help">WhatsApp ne s'ouvre pas ? Copiez le message et envoyez-le au {e(k["whatsappDisplay"])}, ou appelez le <a class="link" href="tel:+{e(k["phone"])}">{e(k["phoneDisplay"])}</a>.</p>
+          <p class="sent__help">WhatsApp ne s'ouvre pas ? Copiez le message et envoyez-le au {e(k["whatsappDisplay"])}, ou appelez le <a class="link" href="tel:+{S.phone}">{e(k["phoneDisplay"])}</a>.</p>
           <div class="sent__done">
             <button class="btn btn--primary" type="button" data-done>C'est envoyé — vider mon panier</button>
             <button class="link" type="button" data-edit>Revenir à ma commande</button>
@@ -1075,15 +1204,19 @@ def page_checkout(S):
     <noscript><p class="empty__title">Pour commander sans JavaScript, écrivez-nous sur WhatsApp au {e(k["whatsappDisplay"])}.</p></noscript>
   </div>
 </main>'''
-    return layout(S, page_id="checkout", title="Finaliser ma commande | Prince Shop", path="/commande/",
+    return layout(S, page_id="checkout", title="Finaliser ma commande | Prince Shop", path="/commande/", bar=False,
                   description="Envoyez votre commande à Prince Shop sur WhatsApp en quelques secondes.", body=body, noindex=True)
 
 
 # --------------------------------------------------------------------------
-# Informations (livraison, paiement, échanges, conditions, confidentialité)
+# Informations : questions fréquentes + livraison, paiement, échanges, conditions, confidentialité
 # --------------------------------------------------------------------------
 def page_legal(S):
-    blocks, toc = [], []
+    faq_items = "".join(
+        f'<details class="acc__item"><summary>{e(f["q"])}{icon("plus")}</summary><div class="acc__body"><p>{e(S.fill(f["a"]))}</p></div></details>'
+        for f in S.content["faq"])
+    blocks = [f'<section class="info__sec" id="questions"><h2 class="section__title">Questions fréquentes</h2><div class="acc">{faq_items}</div></section>']
+    toc = ['<li><a href="#questions">Questions fréquentes</a></li>']
     for sec in S.content["legal"]:
         toc.append(f'<li><a href="#{e(sec["id"])}">{e(sec["title"])}</a></li>')
         paras = "".join(f"<p>{e(S.fill(p))}</p>" for p in sec.get("body", []))
@@ -1104,8 +1237,8 @@ def page_legal(S):
   </div>
 </main>'''
     pending = any(not s.get("confirmed") for s in S.content["legal"])
-    return layout(S, page_id="info", title="Livraison, paiement & informations | Prince Shop", path="/informations/",
-                  description="Livraison partout au Maroc, paiement, échanges et conditions de vente de Prince Shop.",
+    return layout(S, page_id="info", title="Questions, livraison & informations | Prince Shop", path="/informations/",
+                  description="Questions fréquentes, livraison partout au Maroc, paiement, échanges et conditions de vente de Prince Shop.",
                   body=body, noindex=pending)
 
 

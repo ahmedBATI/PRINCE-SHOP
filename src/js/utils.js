@@ -25,10 +25,16 @@ export function priceHTML(product) {
 }
 
 // Photo du produit, ou l'échantillon de couleur tant qu'aucune photo n'est fournie.
+// Une image du catalogue = { src, srcset, thumb, full } (voir Site.sources dans src/pages.py).
+export function pickImage(product, color) {
+  const c = color || product.colors[0];
+  return c?.images[0] || product.images[0] || null;
+}
+
 export function mediaHTML(product, color, alt = '') {
   const c = color || product.colors[0];
-  const src = c?.images[0] || product.images[0] || product.colors.find((x) => x.images.length)?.images[0];
-  if (src) return `<img src="${esc(src)}" alt="${esc(alt)}" width="1200" height="1500" loading="lazy" decoding="async">`;
+  const image = pickImage(product, color);
+  if (image) return `<img src="${esc(image.thumb)}" alt="${esc(alt)}" width="160" height="200" loading="lazy" decoding="async">`;
   const label = alt ? ` role="img" aria-label="${esc(alt)} — photo à venir"` : ' aria-hidden="true"';
   return `<div class="ph ph--${c ? c.tone : 'light'}" style="--c:${esc(c ? c.hex : '#CFC8BB')}"${label}>` +
     `<span class="ph__chip"></span><span class="ph__cap"><em>${esc(c ? c.name : product.word)}</em><small>Photo à venir</small></span></div>`;
@@ -51,13 +57,21 @@ export const storage = {
 };
 
 let toastTimer;
-export function toast(message) {
+// Message bref en bas d'écran. { html: true } pour un contenu riche (vignette, bouton).
+export function toast(message, { html = false, duration = 2600 } = {}) {
   const el = $('[data-toast]');
   if (!el) return;
-  el.textContent = message;
+  el.classList.toggle('toast--rich', html);
+  if (html) el.innerHTML = message;
+  else el.textContent = message;
   el.classList.add('is-on');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('is-on'), 2600);
+  toastTimer = setTimeout(() => el.classList.remove('is-on'), duration);
+}
+
+export function hideToast() {
+  clearTimeout(toastTimer);
+  $('[data-toast]')?.classList.remove('is-on');
 }
 
 export const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;

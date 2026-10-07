@@ -2,7 +2,7 @@
 // Rien n'est envoyé à un serveur : la commande part dans le message WhatsApp du client.
 import { cart } from './cart.js';
 import { linePrice, lineVariant, totalsHTML } from './cart-drawer.js';
-import { orderMessage, waUrl } from './whatsapp.js';
+import { fullMessage, orderMessage, waUrl } from './whatsapp.js';
 import { $, $$, esc, icon, mediaHTML, money, plural, storage, toast } from './utils.js';
 
 const DRAFT_KEY = 'princeshop.order.v1'; // brouillon du formulaire, gardé le temps de l'onglet
@@ -100,9 +100,10 @@ export function init() {
     if (customer.note) rows.push(['Note', customer.note]);
     $('[data-review-customer]', root).innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
     $('[data-review-items]', root).innerHTML = `${lines.map(miniHTML).join('')}<dl class="totals">${totalsHTML(totals)}</dl>`;
-    message = orderMessage(lines, totals, customer);
+    const order = orderMessage(lines, totals, customer);
+    message = fullMessage(order); // tel qu'il part : avec l'avertissement de démonstration le cas échéant
     $('[data-message]', root).textContent = message;
-    const href = waUrl(message);
+    const href = waUrl(order);
     $('[data-send]', root).href = href;
     $('[data-resend]', root).href = href;
   }

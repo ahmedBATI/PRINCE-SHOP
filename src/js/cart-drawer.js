@@ -23,7 +23,7 @@ export function totalsHTML(totals) {
     : '';
   const subtotal = totals.unpriced && !totals.subtotal ? 'à confirmer' : money(totals.subtotal);
   const delivery = CONFIG.deliveryFee == null ? esc(CONFIG.deliveryLabel) : money(CONFIG.deliveryFee);
-  return `<div class="sum sum--total"><dt>Sous-total produits</dt><dd>${subtotal}</dd></div>${pending}` +
+  return `<div class="sum sum--total"><dt>Sous-total</dt><dd>${subtotal}</dd></div>${pending}` +
     `<div class="sum sum--soft"><dt>Livraison</dt><dd>${delivery}</dd></div>`;
 }
 
@@ -108,8 +108,8 @@ export function initCartDrawer() {
         <div class="cart__foot">
           <dl>${totalsHTML(totals)}</dl>
           ${ready
-            ? `<a class="btn btn--primary btn--block" href="${base}/commande/">Passer commande</a>`
-            : '<button class="btn btn--primary btn--block" type="button" disabled>Passer commande</button>'}
+            ? `<a class="btn btn--primary btn--block" href="${base}/commande/">Passer la commande</a>`
+            : '<button class="btn btn--primary btn--block" type="button" disabled>Passer la commande</button>'}
           <p class="cart__note">Vous vérifiez tout avant l’envoi sur WhatsApp. Aucun compte à créer.</p>
         </div>`;
     }

@@ -89,9 +89,12 @@ def validate(config, products):
             if not HEX.match(c.get("hex", "")):
                 errors.append(f'{where} : couleur « {c.get("name")} » — code hex invalide « {c.get("hex")} ».')
         refs = list(p.get("images", [])) + [img for c in p.get("colors", []) for img in c.get("images", [])]
-        for rel in refs:
-            if not (ASSETS / "products" / rel).is_file():
-                errors.append(f"{where} : photo introuvable — assets/products/{rel}")
+        for image in refs:
+            src = pages.as_image(image).get("src", "")
+            if not src:
+                errors.append(f"{where} : une image n'a pas d'adresse (champ « src »).")
+            elif not pages.is_remote(src) and not (ASSETS / "products" / src).is_file():
+                errors.append(f"{where} : photo introuvable — assets/products/{src}")
         if not refs:
             no_photo.append(p.get("ref", "?"))
         if price is None:
@@ -104,6 +107,16 @@ def validate(config, products):
         p["sizes"] = [str(s) for s in p["sizes"]]
         p["unavailableSizes"] = [str(s) for s in p.get("unavailableSizes", [])]
 
+    demo_left = [p.get("ref", "?") for p in products if p.get("demo")]
+    if config.get("DEMO_MODE") and demo_left:
+        warnings.append(f"DEMO_MODE actif : {len(demo_left)} produit(s) de démonstration à remplacer ({', '.join(demo_left)}).")
+    if not config.get("DEMO_MODE"):
+        stock = [where for where, src in (
+            [("hero.images", pages.as_image(i)["src"]) for i in config["hero"].get("images", [])]
+            + [(f'categories › {c["label"]} › image', pages.as_image(c["image"])["src"]) for c in config["categories"] if c.get("image")]
+        ) if src.startswith(pages.UNSPLASH)]
+        if stock:
+            warnings.append("DEMO_MODE désactivé mais config.json utilise encore des photos de démonstration : " + ", ".join(stock) + ".")
     if no_photo:
         warnings.append(f"{len(no_photo)} produit(s) sans photo, visuel d'attente affiché : {', '.join(no_photo)}")
     if no_price:
@@ -113,7 +126,7 @@ def validate(config, products):
     if not config["store"]["hours"].get("confirmed"):
         warnings.append("config.json › store.hours : horaires repris de Google Maps, à confirmer.")
     if not config["payment"].get("confirmed"):
-        warnings.append("config.json › payment : formulation reprise de la bio Instagram (« Payement avant »), à confirmer.")
+        warnings.append("config.json › payment : modalités de paiement à confirmer (la bio Instagram indique « Payement avant »).")
 
 
 # --------------------------------------------------------------------------
@@ -125,7 +138,10 @@ def client_data(S):
         "base": S.base,
         "currency": c["site"]["currency"],
         "priceOnRequest": c["site"]["priceOnRequest"],
-        "whatsapp": c["contact"]["whatsapp"],
+        "whatsapp": S.whatsapp,
+        "demo": S.demo,
+        "demoOrderNotice": c["demo"]["orderNotice"] if S.demo else "",
+        "demoImageLabel": c["demo"]["imageLabel"] if S.demo else "",
         "whatsappDisplay": c["contact"]["whatsappDisplay"],
         "messages": c["messages"],
         "deliveryLabel": c["delivery"]["feeLabel"],
@@ -140,14 +156,15 @@ def client_data(S):
         t = S.type_of(p)
         colors = []
         for col in p["colors"]:
-            imgs = S.images_for(p, col) if col.get("images") else []
             colors.append({"name": col["name"], "hex": col["hex"], "tone": pages.tone(col["hex"]),
-                           "slug": pages.slug(col["name"]), "images": [S.image_url(i) for i in imgs]})
+                           "slug": pages.slug(col["name"]), "images": [S.sources(i) for i in col.get("images", [])]})
         products.append({
             "id": p["id"], "ref": p["ref"], "name": p["name"], "url": S.product_url(p),
             "category": p["category"], "type": p.get("type", ""), "typeLabel": t["label"], "word": t["word"],
             "price": p.get("price"), "compareAtPrice": p.get("compareAtPrice"),
-            "images": [S.image_url(i) for i in p["images"]],
+            "images": [S.sources(i) for i in S.images_for(p)], "demo": S.is_demo(p),
+            "photoColor": next((col["name"] for col in p["colors"] if col.get("images")), p["colors"][0]["name"] if p["colors"] else "")
+            if not p["images"] else (p["colors"][0]["name"] if p["colors"] else ""),
             "colors": colors, "sizes": p["sizes"], "unavailableSizes": p["unavailableSizes"],
             "tags": p["tags"], "badge": p.get("badge"), "available": p["available"], "date": p.get("dateAdded", ""),
         })
@@ -205,6 +222,15 @@ def build():
     if arg("base") is not None:
         config["site"]["basePath"] = arg("base")
     config["site"]["noindex"] = "--noindex" in sys.argv
+    if not config.get("DEMO_MODE"):
+        hidden = [p for p in products if p.get("demo")]
+        products = [p for p in products if not p.get("demo")]
+        if hidden:
+            warnings.append(f"DEMO_MODE désactivé : {len(hidden)} produit(s) encore marqués « demo » ne sont pas publiés "
+                            f"({', '.join(p.get('ref', '?') for p in hidden)}). Passer « demo » à false une fois le produit réel.")
+        if not products:
+            errors.append("DEMO_MODE est désactivé mais tous les produits sont encore marqués « demo ». "
+                          "Remplacez au moins un produit (\"demo\": false) ou repassez DEMO_MODE à true.")
     validate(config, products)
     if errors:
         print("\n✗ Le site n'a pas été généré. À corriger dans data/ :\n")

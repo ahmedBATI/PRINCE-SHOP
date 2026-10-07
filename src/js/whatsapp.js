@@ -1,19 +1,28 @@
 // Générateur de messages WhatsApp.
-// Le numéro et les formules viennent de data/config.json (contact.whatsapp, messages).
+// Le numéro et les formules viennent de data/config.json (contact.WHATSAPP_NUMBER, messages).
 import { CONFIG } from './site-data.js';
 import { money, plural } from './utils.js';
 
-export const waUrl = (text) => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
+// En mode démonstration, chaque message commence par un avertissement : la boutique sait que c'est un test.
+const withNotice = (text) => (CONFIG.demo && CONFIG.demoOrderNotice ? `${CONFIG.demoOrderNotice}\n\n${text}` : text);
 
-// « • Mocassin à breloques (réf. PS-101) — Camel — 42 — x1 — 250 DH »
+export const waUrl = (text) => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(withNotice(text))}`;
+
+const sizeLabel = (product) => CONFIG.categories.find((c) => c.id === product.category)?.sizeLabel || 'Taille';
+
+// • Mocassin Signature (réf. PS-101)
+// Couleur : Camel
+// Pointure : 42
+// Quantité : 1
+// Prix : 349 DH
 function orderLine(line) {
-  const parts = [`${line.product.name} (réf. ${line.product.ref})`];
-  if (line.color) parts.push(line.color);
-  if (line.size) parts.push(line.size);
-  parts.push(`x${line.qty}`);
-  if (line.total == null) parts.push('prix à confirmer');
-  else parts.push(line.qty > 1 ? `${money(line.total)} (${money(line.unitPrice)} l'unité)` : money(line.total));
-  return `• ${parts.join(' — ')}`;
+  const out = [`• ${line.product.name} (réf. ${line.product.ref})`];
+  if (line.color) out.push(`Couleur : ${line.color}`);
+  if (line.size) out.push(`${sizeLabel(line.product)} : ${line.size}`);
+  out.push(`Quantité : ${line.qty}`);
+  if (line.total == null) out.push('Prix : à confirmer');
+  else out.push(`Prix : ${money(line.total)}${line.qty > 1 ? ` (${money(line.unitPrice)} l'unité)` : ''}`);
+  return out.join('\n');
 }
 
 export function subtotalText(totals) {
@@ -22,11 +31,11 @@ export function subtotalText(totals) {
   return totals.subtotal > 0 ? `${money(totals.subtotal)} + ${pending}` : pending;
 }
 
-// Commande complète : articles, sous-total, coordonnées, note.
+// Commande complète : articles, sous-total, coordonnées, note. Toujours construite à partir du panier réel.
 export function orderMessage(lines, totals, customer) {
   const m = CONFIG.messages;
-  const out = [m.greeting, '', m.orderIntro, '', ...lines.map(orderLine), ''];
-  out.push(`Sous-total produits : ${subtotalText(totals)}`);
+  const out = [m.greeting, '', m.orderIntro, '', lines.map(orderLine).join('\n\n'), ''];
+  out.push(`Sous-total : ${subtotalText(totals)}`);
   out.push(`Livraison : ${CONFIG.deliveryFee == null ? 'à confirmer' : money(CONFIG.deliveryFee)}`);
   out.push('', 'Informations client :');
   out.push(`Nom : ${customer.name}`, `Téléphone : ${customer.phone}`, `Ville : ${customer.city}`, `Adresse : ${customer.address}`);
@@ -34,6 +43,9 @@ export function orderMessage(lines, totals, customer) {
   out.push('', m.orderClosing);
   return out.join('\n');
 }
+
+// Message tel qu'il part réellement (avec l'avertissement de démonstration le cas échéant).
+export const fullMessage = (text) => withNotice(text);
 
 // Question sur un article précis, depuis sa fiche.
 export function productMessage(product, { color, size } = {}) {

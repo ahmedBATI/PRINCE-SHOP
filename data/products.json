@@ -2,38 +2,53 @@
   "_guide": [
     "LE CATALOGUE — un bloc { ... } par produit. C'est le seul fichier à modifier pour ajouter, retirer ou changer un article.",
     "Après chaque modification : lancer `python build.py`. Le script signale les erreurs (id en double, photo introuvable, etc.).",
+    "",
+    "REMPLACER UN PRODUIT DÉMO PAR UN VRAI PRODUIT :",
+    "  1. images      → vos photos : chemin dans assets/products/ (ex. \"shoes/mocassin-1.jpg\") ou adresse web complète.",
+    "  2. name, price → le vrai nom, le vrai prix en dirhams (null = « Prix sur demande »).",
+    "  3. colors, sizes, description, details → les vraies informations.",
+    "  4. demo        → passer à false. Le produit n'affiche plus la mention « Visuel démo ».",
+    "",
     "id            : identifiant unique, en minuscules avec tirets. Il devient l'adresse de la page : /produit/<id>/",
     "ref           : référence courte reprise dans le message WhatsApp, pour que le vendeur retrouve l'article.",
     "category/type : doivent correspondre aux catégories déclarées dans config.json.",
-    "price         : nombre en dirhams, ou null si le prix n'est pas encore fixé (le site affiche « Prix sur demande »).",
     "compareAtPrice: ancien prix, UNIQUEMENT pour une vraie promotion. Sinon null.",
-    "images        : photos communes à toutes les couleurs, chemins relatifs à assets/products/ (ex. \"shoes/mocassin-1.jpg\").",
-    "colors        : nom + code couleur (hex) + photos propres à cette couleur (facultatif).",
+    "images        : la 1re est la photo principale, la 2e apparaît au survol. Une image peut aussi être un recadrage :",
+    "                { \"src\": \"...\", \"zoom\": 1.8, \"x\": 0.5, \"y\": 0.5 } (gros plan centré sur x/y, de 0 à 1).",
+    "colors        : nom + code couleur (hex) + photos propres à cette couleur (facultatif : la galerie change quand on choisit la couleur).",
     "sizes         : pointures proposées. unavailableSizes : pointures épuisées (affichées barrées).",
     "badge         : \"Nouveau\" ou null. Ne jamais mettre « Best-seller » sans données de vente réelles.",
+    "featured      : true = mis en avant dans « Sélection du moment » sur l'accueil.",
     "available     : false = article affiché comme indisponible, impossible à ajouter au panier.",
-    "instagramUrl  : lien vers le reel où l'on voit l'article (facultatif)."
+    "tags          : mots-clés pour la recherche."
   ],
 
-  "_statut": "CATALOGUE DE DÉPART. Il reprend les types d'articles visibles sur @princeshop_ali (août–octobre 2026). Vérifié sur Instagram : le mocassin en 11 couleurs et le prix de 250 DH de la basket running. Tout le reste (noms, couleurs, pointures, prix manquants) est à valider ou remplacer par la boutique.",
+  "_statut": "CATALOGUE DE DÉMONSTRATION. Les 16 produits reprennent les familles d'articles visibles sur @princeshop_ali (mocassins, baskets, sandales, sacs, lunettes), avec des photos libres de droits (Unsplash) et des prix d'exemple. Seuls deux éléments viennent réellement d'Instagram : le mocassin décliné en 11 couleurs, et le prix de 250 DH d'une basket. Tout le reste est à remplacer.",
 
   "products": [
     {
-      "id": "mocassin-breloques",
+      "id": "mocassin-signature",
       "ref": "PS-101",
-      "name": "Mocassin à breloques",
+      "demo": true,
+      "name": "Mocassin Signature",
       "category": "chaussures",
       "type": "mocassins",
-      "price": null,
+      "price": 349,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1676121270762-47c8d3a7b9d5",
+        { "src": "https://images.unsplash.com/photo-1676121270762-47c8d3a7b9d5", "zoom": 2, "x": 0.5, "y": 0.45 }
+      ],
       "colors": [
         { "name": "Camel", "hex": "#B58A5F", "images": [] },
+        { "name": "Bleu gris", "hex": "#7F8FA6", "images": [
+          "https://images.unsplash.com/photo-1678784973551-f38208de2529",
+          "https://images.unsplash.com/photo-1678784973073-f6a227408e81"
+        ] },
         { "name": "Crème", "hex": "#E3D8C3", "images": [] },
         { "name": "Blanc", "hex": "#F0EDE6", "images": [] },
         { "name": "Noir", "hex": "#1C1A18", "images": [] },
         { "name": "Bleu marine", "hex": "#242D46", "images": [] },
-        { "name": "Bleu ciel", "hex": "#A9C1D9", "images": [] },
         { "name": "Gris", "hex": "#8D8C88", "images": [] },
         { "name": "Rouge", "hex": "#A5232D", "images": [] },
         { "name": "Orange", "hex": "#D2622C", "images": [] }
@@ -41,279 +56,406 @@
       "colorNote": "11 couleurs en boutique — demandez les autres coloris sur WhatsApp.",
       "sizes": ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45"],
       "unavailableSizes": [],
-      "description": "Mocassin aspect daim à semelle claire, signé d'une paire de breloques. À voir en vidéo sur notre Instagram.",
-      "details": ["Finition aspect daim", "Semelle claire", "Breloques finition dorée"],
-      "tags": ["mocassin", "loafer", "daim", "breloque", "ville"],
+      "description": "Mocassin aspect daim à semelle fine, signé d'un mors doré sur le dessus.",
+      "details": ["Finition aspect daim", "Mors finition dorée", "Semelle fine"],
+      "tags": ["mocassin", "loafer", "daim", "mors", "ville"],
       "badge": "Nouveau",
       "featured": true,
       "available": true,
-      "dateAdded": "2026-08-22",
-      "instagramUrl": "https://www.instagram.com/princeshop_ali/reel/DcXNbd-iBlb/"
+      "dateAdded": "2026-10-02"
+    },
+    {
+      "id": "mocassin-lace",
+      "ref": "PS-102",
+      "demo": true,
+      "name": "Mocassin Lacé",
+      "category": "chaussures",
+      "type": "mocassins",
+      "price": 299,
+      "compareAtPrice": null,
+      "images": [
+        "https://images.unsplash.com/photo-1654945419086-bcb1c1e1b875",
+        { "src": "https://images.unsplash.com/photo-1654945419086-bcb1c1e1b875", "zoom": 1.7, "x": 0.45, "y": 0.5 }
+      ],
+      "colors": [
+        { "name": "Orange", "hex": "#D98A2B", "images": [] }
+      ],
+      "sizes": ["39", "40", "41", "42", "43", "44"],
+      "unavailableSizes": [],
+      "description": "Mocassin bateau aspect daim, lacet ton sur ton noué sur le dessus.",
+      "details": ["Finition aspect daim", "Lacet noué", "Semelle picots"],
+      "tags": ["mocassin", "bateau", "daim", "été"],
+      "badge": null,
+      "featured": false,
+      "available": true,
+      "dateAdded": "2026-09-12"
     },
     {
       "id": "basket-running-retro",
       "ref": "PS-201",
-      "name": "Basket running rétro",
+      "demo": true,
+      "name": "Basket Running Rétro",
       "category": "chaussures",
       "type": "baskets",
       "price": 250,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1534211129854-99797e4df89d",
+        { "src": "https://images.unsplash.com/photo-1534211129854-99797e4df89d", "zoom": 1.7, "x": 0.62, "y": 0.5 }
+      ],
       "colors": [
-        { "name": "Marron", "hex": "#6A4A3B", "images": [] }
+        { "name": "Bleu nuit", "hex": "#1F2733", "images": [] }
       ],
       "sizes": ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45"],
       "unavailableSizes": [],
       "description": "Basket d'inspiration running, empiècements ton sur ton et semelle crantée.",
-      "details": ["Semelle crantée", "Laçage classique"],
+      "details": ["Semelle crantée", "Empiècements ton sur ton", "Laçage classique"],
       "tags": ["basket", "sneaker", "running", "sport", "espadrille"],
       "badge": "Nouveau",
       "featured": true,
       "available": true,
-      "dateAdded": "2026-09-07",
-      "instagramUrl": "https://www.instagram.com/princeshop_ali/reel/Dc_9wcnOHHx/"
-    },
-    {
-      "id": "basket-basse-retro",
-      "ref": "PS-202",
-      "name": "Basket basse rétro",
-      "category": "chaussures",
-      "type": "baskets",
-      "price": null,
-      "compareAtPrice": null,
-      "images": [],
-      "colors": [
-        { "name": "Blanc", "hex": "#F0EDE6", "images": [] },
-        { "name": "Rose", "hex": "#E3A9BD", "images": [] },
-        { "name": "Noir", "hex": "#1C1A18", "images": [] }
-      ],
-      "sizes": ["36", "37", "38", "39", "40", "41", "42", "43", "44"],
-      "unavailableSizes": [],
-      "description": "Basket basse à semelle fine, bandes contrastées sur le côté.",
-      "details": ["Semelle fine", "Bandes latérales contrastées"],
-      "tags": ["basket", "sneaker", "basse", "ville", "espadrille"],
-      "badge": "Nouveau",
-      "featured": false,
-      "available": true,
-      "dateAdded": "2026-09-28",
-      "instagramUrl": ""
+      "dateAdded": "2026-09-28"
     },
     {
       "id": "basket-bicolore",
-      "ref": "PS-203",
-      "name": "Basket bicolore",
+      "ref": "PS-202",
+      "demo": true,
+      "name": "Basket Bicolore",
       "category": "chaussures",
       "type": "baskets",
-      "price": null,
+      "price": 299,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1603808033192-082d6919d3e1",
+        "https://images.unsplash.com/photo-1603808033596-5d1fa1629eae"
+      ],
       "colors": [
-        { "name": "Rose pâle", "hex": "#EFC6D1", "images": [] },
+        { "name": "Blanc cassé", "hex": "#E9E2D6", "images": [] }
+      ],
+      "sizes": ["36", "37", "38", "39", "40", "41", "42", "43", "44"],
+      "unavailableSizes": ["44"],
+      "description": "Basket basse en deux tons, empiècements beiges et talon contrasté.",
+      "details": ["Deux tons", "Talon contrasté", "Semelle blanche"],
+      "tags": ["basket", "sneaker", "bicolore", "espadrille", "blanche"],
+      "badge": "Nouveau",
+      "featured": true,
+      "available": true,
+      "dateAdded": "2026-09-30"
+    },
+    {
+      "id": "basket-noire",
+      "ref": "PS-203",
+      "demo": true,
+      "name": "Basket Noire",
+      "category": "chaussures",
+      "type": "baskets",
+      "price": 279,
+      "compareAtPrice": null,
+      "images": [
+        "https://images.unsplash.com/photo-1632497775897-815042a13216",
+        "https://images.unsplash.com/photo-1632497775901-50ba4637399f"
+      ],
+      "colors": [
+        { "name": "Noir", "hex": "#1C1A18", "images": [] }
+      ],
+      "sizes": ["39", "40", "41", "42", "43", "44", "45"],
+      "unavailableSizes": [],
+      "description": "Basket basse tout noir, de la tige à la semelle.",
+      "details": ["Tout noir", "Laçage classique"],
+      "tags": ["basket", "sneaker", "noire", "espadrille"],
+      "badge": null,
+      "featured": false,
+      "available": true,
+      "dateAdded": "2026-09-05"
+    },
+    {
+      "id": "sandale-a-talon",
+      "ref": "PS-301",
+      "demo": true,
+      "name": "Sandale à Talon",
+      "category": "chaussures",
+      "type": "sandales",
+      "price": 289,
+      "compareAtPrice": null,
+      "images": [
+        "https://images.unsplash.com/photo-1770757685000-c80e45122986",
+        "https://images.unsplash.com/photo-1770757685173-94df47a52b68"
+      ],
+      "colors": [
+        { "name": "Beige", "hex": "#D9C4A5", "images": [] }
+      ],
+      "sizes": ["36", "37", "38", "39", "40", "41"],
+      "unavailableSizes": [],
+      "description": "Sandale à brides fines et talon bloc, pour les soirées comme pour la journée.",
+      "details": ["Talon bloc", "Brides fines"],
+      "tags": ["sandale", "talon", "soirée", "femme"],
+      "badge": "Nouveau",
+      "featured": false,
+      "available": true,
+      "dateAdded": "2026-09-20"
+    },
+    {
+      "id": "sandale-cloutee",
+      "ref": "PS-302",
+      "demo": true,
+      "name": "Sandale Cloutée",
+      "category": "chaussures",
+      "type": "sandales",
+      "price": 199,
+      "compareAtPrice": null,
+      "images": [
+        "https://images.unsplash.com/photo-1700611193533-e25b4f24d919",
+        { "src": "https://images.unsplash.com/photo-1700611193533-e25b4f24d919", "zoom": 1.8, "x": 0.5, "y": 0.5 }
+      ],
+      "colors": [
         { "name": "Blanc", "hex": "#F0EDE6", "images": [] }
       ],
       "sizes": ["36", "37", "38", "39", "40", "41"],
       "unavailableSizes": [],
-      "description": "Basket basse en deux tons, empiècements contrastés.",
-      "details": ["Deux tons", "Laçage classique"],
-      "tags": ["basket", "sneaker", "bicolore", "espadrille"],
-      "badge": "Nouveau",
+      "description": "Sandale plate à brides, relevée de clous dorés.",
+      "details": ["Talon plat", "Clous finition dorée", "Bride cheville"],
+      "tags": ["sandale", "plate", "clous", "été", "femme"],
+      "badge": null,
       "featured": false,
       "available": true,
-      "dateAdded": "2026-09-28",
-      "instagramUrl": ""
+      "dateAdded": "2026-08-22"
     },
     {
-      "id": "sandale-plate",
-      "ref": "PS-301",
-      "name": "Sandale plate",
-      "category": "chaussures",
-      "type": "sandales",
-      "price": null,
-      "compareAtPrice": null,
-      "images": [],
-      "colors": [
-        { "name": "Noir", "hex": "#1C1A18", "images": [] },
-        { "name": "Blanc", "hex": "#F0EDE6", "images": [] },
-        { "name": "Camel", "hex": "#B58A5F", "images": [] }
-      ],
-      "sizes": ["36", "37", "38", "39", "40", "41"],
-      "unavailableSizes": [],
-      "description": "Sandale plate à brides, pour tous les jours.",
-      "details": ["Talon plat", "Brides sur le dessus"],
-      "tags": ["sandale", "mule", "claquette", "été"],
-      "badge": null,
-      "featured": true,
-      "available": true,
-      "dateAdded": "2026-08-22",
-      "instagramUrl": ""
-    },
-    {
-      "id": "sac-a-main-structure",
+      "id": "sac-elegance",
       "ref": "PS-401",
-      "name": "Sac à main structuré",
+      "demo": true,
+      "name": "Sac Élégance",
       "category": "sacs",
       "type": "sacs-a-main",
-      "price": null,
+      "price": 449,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1640901555383-7335ec5a6476",
+        { "src": "https://images.unsplash.com/photo-1640901555383-7335ec5a6476", "zoom": 1.9, "x": 0.45, "y": 0.6 }
+      ],
       "colors": [
-        { "name": "Vert", "hex": "#1F5A3D", "images": [] },
-        { "name": "Noir", "hex": "#1C1A18", "images": [] },
-        { "name": "Camel", "hex": "#B58A5F", "images": [] },
-        { "name": "Jaune", "hex": "#E0B020", "images": [] }
+        { "name": "Jaune", "hex": "#E9B800", "images": [] }
       ],
       "sizes": [],
       "unavailableSizes": [],
-      "description": "Sac à main à anse rigide et rabat, lignes nettes.",
-      "details": ["Anse rigide", "Fermeture à rabat"],
-      "tags": ["sac", "sac à main", "anse", "structuré"],
+      "description": "Sac à main structuré à anse rigide, rabat et fermoir métallique.",
+      "details": ["Anse rigide", "Fermoir métallique", "Bandoulière amovible"],
+      "tags": ["sac", "sac à main", "anse", "structuré", "jaune"],
       "badge": "Nouveau",
       "featured": true,
       "available": true,
-      "dateAdded": "2026-09-21",
-      "instagramUrl": ""
+      "dateAdded": "2026-09-25"
     },
     {
-      "id": "sac-matelasse-rabat",
+      "id": "sac-coquille",
       "ref": "PS-402",
-      "name": "Sac matelassé à rabat",
+      "demo": true,
+      "name": "Sac Coquille",
       "category": "sacs",
       "type": "sacs-a-main",
-      "price": null,
+      "price": 399,
       "compareAtPrice": null,
       "images": [],
       "colors": [
-        { "name": "Beige", "hex": "#D6C5A6", "images": [] },
+        { "name": "Beige", "hex": "#D9CDB8", "images": [
+          "https://images.unsplash.com/photo-1761646238176-b480909e6ba6",
+          { "src": "https://images.unsplash.com/photo-1761646238176-b480909e6ba6", "zoom": 1.8, "x": 0.5, "y": 0.55 }
+        ] },
+        { "name": "Blanc", "hex": "#F0EDE6", "images": ["https://images.unsplash.com/photo-1761646237863-3346a1257e68"] },
+        { "name": "Tartan", "hex": "#6B3A55", "images": ["https://images.unsplash.com/photo-1761646238073-224642c938ee"] }
+      ],
+      "sizes": [],
+      "unavailableSizes": [],
+      "description": "Petit sac plissé en forme de coquillage, porté main par son anse arrondie.",
+      "details": ["Forme coquillage plissée", "Anse arrondie", "Petit format"],
+      "tags": ["sac", "mini", "soirée", "plissé", "coquillage"],
+      "badge": "Nouveau",
+      "featured": true,
+      "available": true,
+      "dateAdded": "2026-09-22"
+    },
+    {
+      "id": "sac-nomade",
+      "ref": "PS-411",
+      "demo": true,
+      "name": "Sac Nomade",
+      "category": "sacs",
+      "type": "bandouliere",
+      "price": 329,
+      "compareAtPrice": null,
+      "images": [
+        "https://images.unsplash.com/photo-1620786514669-06e2340fce71",
+        "https://images.unsplash.com/photo-1620786514684-ff35b5aae55e"
+      ],
+      "colors": [
         { "name": "Noir", "hex": "#1C1A18", "images": [] }
       ],
       "sizes": [],
       "unavailableSizes": [],
-      "description": "Sac à rabat matelassé, porté épaule avec sa chaîne.",
-      "details": ["Surpiqûres matelassées", "Bandoulière chaîne"],
-      "tags": ["sac", "matelassé", "chaîne", "rabat", "soirée"],
-      "badge": "Nouveau",
+      "description": "Sac bandoulière compact à porter croisé, poche zippée sur le devant.",
+      "details": ["Porté croisé", "Poche zippée", "Bandoulière réglable"],
+      "tags": ["sac", "bandoulière", "sacoche", "croisé", "noir"],
+      "badge": null,
       "featured": false,
       "available": true,
-      "dateAdded": "2026-09-22",
-      "instagramUrl": ""
+      "dateAdded": "2026-09-23"
     },
     {
       "id": "sac-bowling",
       "ref": "PS-403",
-      "name": "Sac bowling",
+      "demo": true,
+      "name": "Sac Bowling",
       "category": "sacs",
       "type": "sacs-a-main",
-      "price": null,
+      "price": 479,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1705909237050-7a7625b47fac",
+        { "src": "https://images.unsplash.com/photo-1705909237050-7a7625b47fac", "zoom": 1.8, "x": 0.5, "y": 0.5 }
+      ],
       "colors": [
-        { "name": "Marron", "hex": "#5B3F2C", "images": [] },
         { "name": "Noir", "hex": "#1C1A18", "images": [] }
       ],
       "sizes": [],
       "unavailableSizes": [],
-      "description": "Sac bowling à double anse, format du quotidien.",
-      "details": ["Double anse"],
-      "tags": ["sac", "bowling", "sac à main", "quotidien"],
-      "badge": "Nouveau",
+      "description": "Sac bowling à double anse et boucles métalliques, format du quotidien.",
+      "details": ["Double anse", "Boucles métalliques", "Grand format"],
+      "tags": ["sac", "bowling", "sac à main", "quotidien", "noir"],
+      "badge": null,
       "featured": true,
       "available": true,
-      "dateAdded": "2026-09-21",
-      "instagramUrl": ""
+      "dateAdded": "2026-09-21"
     },
     {
-      "id": "sac-bandouliere",
-      "ref": "PS-411",
-      "name": "Sac bandoulière",
+      "id": "cabas-tweed",
+      "ref": "PS-431",
+      "demo": true,
+      "name": "Cabas Tweed",
       "category": "sacs",
-      "type": "bandouliere",
-      "price": null,
+      "type": "cabas",
+      "price": 389,
       "compareAtPrice": null,
       "images": [],
       "colors": [
-        { "name": "Marron", "hex": "#5B3F2C", "images": [] },
-        { "name": "Noir", "hex": "#1C1A18", "images": [] }
+        { "name": "Vert", "hex": "#2F5D46", "images": ["https://images.unsplash.com/photo-1774389080971-01bf5d938a92"] },
+        { "name": "Bordeaux", "hex": "#7A2233", "images": ["https://images.unsplash.com/photo-1774389489708-dd5df89c9f94"] },
+        { "name": "Léopard", "hex": "#A9763F", "images": ["https://images.unsplash.com/photo-1774390304435-9c33140f9de6"] }
       ],
       "sizes": [],
       "unavailableSizes": [],
-      "description": "Petit sac à porter croisé.",
-      "details": ["Porté croisé"],
-      "tags": ["sac", "bandoulière", "sacoche", "croisé"],
+      "description": "Grand cabas en tweed, bande centrale et anses contrastées.",
+      "details": ["Grand format", "Anses contrastées", "Bande centrale"],
+      "tags": ["cabas", "tote", "tweed", "grand sac"],
+      "badge": null,
+      "featured": false,
+      "available": true,
+      "dateAdded": "2026-09-10"
+    },
+    {
+      "id": "sac-matelasse",
+      "ref": "PS-404",
+      "demo": true,
+      "name": "Sac Matelassé",
+      "category": "sacs",
+      "type": "sacs-a-main",
+      "price": 359,
+      "compareAtPrice": null,
+      "images": [
+        "https://images.unsplash.com/photo-1783700475349-46e60e2c959c",
+        "https://images.unsplash.com/photo-1783700475749-6e6521a503fa"
+      ],
+      "colors": [
+        { "name": "Blanc", "hex": "#F0EDE6", "images": [] }
+      ],
+      "sizes": [],
+      "unavailableSizes": [],
+      "description": "Pochette matelassée à porter main ou épaule avec sa chaîne.",
+      "details": ["Surpiqûres matelassées", "Chaîne métallique", "Porté main ou épaule"],
+      "tags": ["sac", "matelassé", "chaîne", "pochette", "soirée", "blanc"],
       "badge": "Nouveau",
       "featured": false,
       "available": true,
-      "dateAdded": "2026-09-23",
-      "instagramUrl": "https://www.instagram.com/princeshop_ali/reel/Ddosu_bOuY4/"
+      "dateAdded": "2026-09-26"
     },
     {
-      "id": "pochette-soiree",
-      "ref": "PS-421",
-      "name": "Pochette de soirée",
-      "category": "sacs",
-      "type": "pochettes",
-      "price": null,
+      "id": "lunettes-aviateur",
+      "ref": "PS-501",
+      "demo": true,
+      "name": "Lunettes Aviateur",
+      "category": "accessoires",
+      "type": "lunettes",
+      "price": 149,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1589642380614-4a8c2147b857",
+        { "src": "https://images.unsplash.com/photo-1589642380614-4a8c2147b857", "zoom": 1.7, "x": 0.5, "y": 0.5 }
+      ],
       "colors": [
-        { "name": "Argenté", "hex": "#C6C6C2", "images": [] }
+        { "name": "Doré", "hex": "#C8A45A", "images": [] }
       ],
       "sizes": [],
       "unavailableSizes": [],
-      "description": "Pochette rigide brillante, pour les soirées et les fêtes.",
-      "details": ["Format rigide", "Finition brillante"],
-      "tags": ["pochette", "soirée", "fête", "mariage", "clutch"],
+      "description": "Lunettes de soleil forme aviateur, monture fine dorée et verres dégradés.",
+      "details": ["Monture métal finition dorée", "Verres dégradés"],
+      "tags": ["lunettes", "soleil", "aviateur", "accessoire"],
       "badge": null,
       "featured": false,
       "available": true,
-      "dateAdded": "2026-09-22",
-      "instagramUrl": ""
+      "dateAdded": "2026-08-19"
     },
     {
-      "id": "cabas-tresse",
-      "ref": "PS-431",
-      "name": "Cabas tressé",
-      "category": "sacs",
-      "type": "cabas",
-      "price": null,
+      "id": "lunettes-rondes",
+      "ref": "PS-502",
+      "demo": true,
+      "name": "Lunettes Rondes",
+      "category": "accessoires",
+      "type": "lunettes",
+      "price": 129,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1587310311582-aa7610e90826",
+        { "src": "https://images.unsplash.com/photo-1587310311582-aa7610e90826", "zoom": 1.6, "x": 0.5, "y": 0.5 }
+      ],
       "colors": [
-        { "name": "Naturel", "hex": "#D7BC8B", "images": [] }
+        { "name": "Écaille", "hex": "#5A3B28", "images": [] }
       ],
       "sizes": [],
       "unavailableSizes": [],
-      "description": "Grand cabas tressé, anses contrastées.",
-      "details": ["Tressé", "Grand format"],
-      "tags": ["cabas", "panier", "tressé", "été", "plage"],
+      "description": "Lunettes de soleil rondes, monture écaille et verres fumés.",
+      "details": ["Monture effet écaille", "Verres fumés"],
+      "tags": ["lunettes", "soleil", "rondes", "accessoire"],
       "badge": null,
       "featured": false,
       "available": true,
-      "dateAdded": "2026-09-21",
-      "instagramUrl": ""
+      "dateAdded": "2026-08-18"
     },
     {
-      "id": "sac-week-end",
-      "ref": "PS-432",
-      "name": "Sac week-end",
-      "category": "sacs",
-      "type": "cabas",
-      "price": null,
+      "id": "porte-cartes",
+      "ref": "PS-511",
+      "demo": true,
+      "name": "Porte-cartes",
+      "category": "accessoires",
+      "type": "maroquinerie",
+      "price": 99,
       "compareAtPrice": null,
-      "images": [],
+      "images": [
+        "https://images.unsplash.com/photo-1639256853919-950a673b1fbc",
+        { "src": "https://images.unsplash.com/photo-1639256853919-950a673b1fbc", "zoom": 1.6, "x": 0.5, "y": 0.5 }
+      ],
       "colors": [
-        { "name": "Marron", "hex": "#5B3F2C", "images": [] },
-        { "name": "Noir", "hex": "#1C1A18", "images": [] }
+        { "name": "Noir", "hex": "#1C1A18", "images": [] },
+        { "name": "Jaune", "hex": "#E0B020", "images": [] },
+        { "name": "Bordeaux", "hex": "#6E2A2A", "images": [] }
       ],
       "sizes": [],
       "unavailableSizes": [],
-      "description": "Sac de voyage à double anse.",
-      "details": ["Double anse", "Format voyage"],
-      "tags": ["sac", "voyage", "week-end", "bagage"],
+      "description": "Porte-cartes plat à rabat pression, à glisser dans une poche.",
+      "details": ["Rabat à pression", "Format poche"],
+      "tags": ["porte-cartes", "portefeuille", "maroquinerie", "accessoire", "cadeau"],
       "badge": null,
       "featured": false,
       "available": true,
-      "dateAdded": "2026-08-19",
-      "instagramUrl": ""
+      "dateAdded": "2026-08-15"
     }
   ]
 }
